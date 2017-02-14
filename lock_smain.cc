@@ -1,5 +1,6 @@
 #include "rpc.h"
 #include <arpa/inet.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "lock_server.h"
