@@ -259,7 +259,7 @@ class rpcs : public chanmgr {
   // has been sent; in that case buf points to a copy of the reply,
   // and sz holds the size of the reply.
   struct reply_t {
-    reply_t (unsigned int _xid) {
+    reply_t(unsigned int _xid) {
       xid = _xid;
       cb_present = false;
       buf = NULL;
@@ -278,6 +278,7 @@ class rpcs : public chanmgr {
   // per client that that client hasn't acknowledged receiving yet.
   // indexed by client nonce.
   std::map<unsigned int, std::list<reply_t>> reply_window_;
+  std::map<unsigned int, unsigned int> reply_window_front_;
 
   void free_reply_window(void);
   void add_reply(unsigned int clt_nonce, unsigned int xid, char *b, int sz);

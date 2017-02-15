@@ -653,12 +653,57 @@ rpcs::dispatch(djob_t *j)
 //   DONE: seen this xid, previous reply returned in *b and *sz.
 //   FORGOTTEN: might have seen this xid, but deleted previous reply.
 rpcs::rpcstate_t
-rpcs::checkduplicate_and_update(unsigned int clt_nonce, unsigned int xid,
-    unsigned int xid_rep, char **b, int *sz)
+rpcs::checkduplicate_and_update(
+    unsigned int clt_nonce, unsigned int xid, unsigned int xid_rep,
+    char **b, int *sz)
 {
   ScopedLock rwl(&reply_window_m_);
 
-  // You fill this in for Lab 1.
+  std::map<unsigned int, std::list<reply_t>>::iterator clt;
+  std::list<reply_t>::iterator it;
+
+  // a new client.
+  clt = reply_window_.find(clt_nonce);
+  if (clt == reply_window_.end()) {
+    reply_window_front_[clt_nonce] = xid_rep;
+    reply_window_[clt_nonce].push_back(reply_t(xid));
+    return NEW;
+  }
+
+  reply_window_front_[clt_nonce] = std::max(reply_window_front_[clt_nonce], xid_rep);
+
+  // remove out-of-dated replies.
+  for (it = clt->second.begin(); it != clt->second.end(); ) {
+    if (it->xid <= xid_rep) {
+      if ((*it).cb_present) {
+        free((*it).buf);
+        it = clt->second.erase(it);
+        continue;
+      }
+    }
+    ++it;
+  }
+
+  // forgotten?
+  if (!clt->second.empty() && xid < reply_window_front_[clt_nonce]) {
+    return FORGOTTEN;
+  }
+
+  // an already received request?
+  for (it = clt->second.begin(); it != clt->second.end(); it++) {
+    if (it->xid == xid) {
+      if (it->cb_present) {
+        *b = it->buf;
+        *sz = it->sz;
+        return DONE;
+      } else {
+        return INPROGRESS;
+      }
+    }
+  }
+
+  clt->second.push_back(reply_t(xid));
+
   return NEW;
 }
 
@@ -671,7 +716,22 @@ void
 rpcs::add_reply(unsigned int clt_nonce, unsigned int xid, char *b, int sz)
 {
   ScopedLock rwl(&reply_window_m_);
-  // You fill this in for Lab 1.
+
+  std::map<unsigned int, std::list<reply_t>>::iterator clt;
+  std::list<reply_t>::iterator it;
+
+  clt = reply_window_.find(clt_nonce);
+  VERIFY(clt != reply_window_.end());
+
+  for (it = clt->second.begin(); it != clt->second.end(); it++) {
+    if (it->xid == xid) {
+      it->cb_present = true;
+      it->buf = b;
+      it->sz = sz;
+      return;
+    }
+  }
+  VERIFY(false);
 }
 
 void
