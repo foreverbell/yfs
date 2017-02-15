@@ -18,7 +18,7 @@ main(int argc, char *argv[])
 {
   int r;
 
-  if(argc != 2){
+  if (argc != 2){
     fprintf(stderr, "Usage: %s [host:]port\n", argv[0]);
     exit(1);
   }
@@ -26,5 +26,5 @@ main(int argc, char *argv[])
   dst = argv[1];
   lc = new lock_client(dst);
   r = lc->stat(1);
-  printf ("stat returned %d\n", r);
+  printf("stat returned %d\n", r);
 }
