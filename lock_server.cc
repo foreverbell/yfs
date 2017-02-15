@@ -6,7 +6,9 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-lock_server::lock_server() { }
+lock_server::lock_server() {
+  pthread_mutex_init(&m, NULL);
+}
 
 lock_protocol::status
 lock_server::stat(int clt, lock_protocol::lockid_t lid, int &r)

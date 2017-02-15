@@ -22,10 +22,9 @@ class lock_server {
     lock_status status;
     pthread_cond_t free_c;
 
-    lock_t()
-      : nacquire(0),
-        status(lock_status::free),
-        free_c(PTHREAD_COND_INITIALIZER) { }
+    lock_t() : nacquire(0), status(lock_status::free) {
+      pthread_cond_init(&free_c, NULL);
+    }
   };
 
   pthread_mutex_t m;
