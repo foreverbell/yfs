@@ -747,6 +747,7 @@ rpcs::free_reply_window(void)
     }
     clt->second.clear();
   }
+  reply_window_front_.clear();
   reply_window_.clear();
 }
 
