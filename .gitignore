@@ -1,6 +1,8 @@
+extent_server
 lock_demo
 lock_server
 lock_tester
+yfs_client
 
 rpc/librpc.a
 rpc/rpctest
@@ -10,3 +12,5 @@ rpc/rpctest
 
 rpc/*.o
 rpc/*.d
+
+*.log

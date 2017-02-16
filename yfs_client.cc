@@ -36,7 +36,7 @@ yfs_client::filename(inum inum)
 bool
 yfs_client::isfile(inum inum)
 {
-  if(inum & 0x80000000)
+  if (inum & 0x80000000)
     return true;
   return false;
 }

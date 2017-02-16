@@ -1,5 +1,6 @@
 #include "rpc.h"
 #include <arpa/inet.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "extent_server.h"
@@ -11,7 +12,7 @@ main(int argc, char *argv[])
 {
   int count = 0;
 
-  if(argc != 2){
+  if (argc != 2) {
     fprintf(stderr, "Usage: %s port\n", argv[0]);
     exit(1);
   }
@@ -19,7 +20,7 @@ main(int argc, char *argv[])
   setvbuf(stdout, NULL, _IONBF, 0);
 
   char *count_env = getenv("RPC_COUNT");
-  if(count_env != NULL){
+  if (count_env != NULL) {
     count = atoi(count_env);
   }
 
@@ -31,6 +32,9 @@ main(int argc, char *argv[])
   server.reg(extent_protocol::put, &ls, &extent_server::put);
   server.reg(extent_protocol::remove, &ls, &extent_server::remove);
 
-  while(1)
+  while (true) {
     sleep(1000);
+  }
+
+  return 0;
 }
