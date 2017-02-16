@@ -97,6 +97,80 @@ yfs_client::getdir(inum inum, dirinfo &din)
   return r;
 }
 
+yfs_client::status
+yfs_client::read(inum inum, size_t size, off_t offset, std::string &output)
+{
+  if (!isfile(inum)) {
+    return NOENT;
+  }
+
+  extent_protocol::status status;
+  std::string buf;
+
+  status = ec->get(inum, buf);
+  if (status != OK) {
+    return status;
+  }
+
+  // Adjust the size to read of fit the file.
+  if (offset >= (off_t) buf.size()) {
+    size = 0;
+  } else {
+    size = std::min(size, buf.size() - offset);
+  }
+
+  output = buf.substr(offset, size);
+
+  return OK;
+}
+
+yfs_client::status
+yfs_client::write(inum inum, const char *input, size_t size, off_t offset)
+{
+  if (!isfile(inum)) {
+    return NOENT;
+  }
+
+  extent_protocol::status status;
+  std::string buf;
+
+  status = ec->get(inum, buf);
+  if (status != OK) {
+    return status;
+  }
+
+  // Grow the file if necessary.
+  if (buf.size() < size + offset) {
+    buf.resize(size + offset);
+  }
+
+  for (size_t i = 0; i < size; ++i) {
+    buf[offset + i] = input[i];
+  }
+
+  return ec->put(inum, buf);
+}
+
+yfs_client::status
+yfs_client::setattr(inum inum, size_t size)
+{
+  if (!isfile(inum)) {
+    return NOENT;
+  }
+
+  extent_protocol::status status;
+  std::string buf;
+
+  status = ec->get(inum, buf);
+  if (status != OK) {
+    return status;
+  }
+
+  buf.resize(size);
+
+  return ec->put(inum, buf);
+}
+
 //
 // The directory content is stored in the following format:
 //  /file_1/inum_1/file_2/inum_2/.../file_n/inum_n.
@@ -126,7 +200,7 @@ yfs_client::readdir(inum parent, std::vector<dirent> &ents)
 
     slash_1 = buf.find("/", last_slash + 1);
     if (slash_1 == std::string::npos) {
-      return IOERR;  // corrupt data
+      return IOERR;  // corrupted data
     }
     slash_2 = buf.find("/", slash_1 + 1);
 

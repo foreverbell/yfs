@@ -25,15 +25,17 @@ extent_server::extent_server()
 
 int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
 {
+  printf("put request id=%lld, size=%ld\n", id, buf.size());
+
   ScopedLock ml(&m);
   extent_t ext;
   unsigned int t = time();
 
-  ext.ext = std::move(buf);
-  ext.attr.size = 0;
-  ext.attr.atime = 0;
+  ext.attr.size = buf.size();
+  ext.attr.atime = t;
   ext.attr.mtime = t;
   ext.attr.ctime = t;
+  ext.ext = std::move(buf);
 
   exts[id] = std::move(ext);
 
@@ -42,6 +44,8 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
 
 int extent_server::get(extent_protocol::extentid_t id, std::string &buf)
 {
+  printf("get request id=%lld", id);
+
   ScopedLock ml(&m);
   std::map<extent_protocol::extentid_t, extent_t>::iterator it;
 
@@ -58,6 +62,8 @@ int extent_server::get(extent_protocol::extentid_t id, std::string &buf)
 
 int extent_server::getattr(extent_protocol::extentid_t id, extent_protocol::attr &a)
 {
+  printf("getattr request id=%lld", id);
+
   ScopedLock ml(&m);
   std::map<extent_protocol::extentid_t, extent_t>::iterator it;
 
@@ -73,6 +79,8 @@ int extent_server::getattr(extent_protocol::extentid_t id, extent_protocol::attr
 
 int extent_server::remove(extent_protocol::extentid_t id, int &)
 {
+  printf("remove request id=%lld", id);
+
   ScopedLock ml(&m);
   std::map<extent_protocol::extentid_t, extent_t>::iterator it;
 

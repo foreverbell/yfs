@@ -44,6 +44,10 @@ class yfs_client {
   status getfile(inum, fileinfo &);
   status getdir(inum, dirinfo &);
 
+  status read(inum, size_t, off_t, std::string &);
+  status write(inum, const char *, size_t, off_t);
+  status setattr(inum, size_t);  // Only set size.
+
   status readdir(inum, std::vector<dirent> &);
   status lookup(inum, const char *, inum &);
   status create(inum, bool, const char *, inum &);
