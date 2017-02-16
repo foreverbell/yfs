@@ -19,7 +19,7 @@ lock_server::stat(int clt, lock_protocol::lockid_t lid, int &r)
   std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
 
   if (it == locks.end()) {
-    return lock_protocol::RPCERR;
+    return lock_protocol::IOERR;
   }
 
   r = it->second.nacquire;
@@ -64,7 +64,7 @@ lock_server::release(int clt, lock_protocol::lockid_t lid, int &r)
   std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
 
   if (it == locks.end() || it->second.status == lock_status::free) {
-    return lock_protocol::RPCERR;
+    return lock_protocol::IOERR;
   }
 
   it->second.status = lock_status::free;

@@ -14,3 +14,6 @@ rpc/*.o
 rpc/*.d
 
 *.log
+
+yfs1/
+yfs2/

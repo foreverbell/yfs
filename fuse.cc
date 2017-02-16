@@ -51,7 +51,7 @@ getattr(yfs_client::inum inum, struct stat &st)
      ret = yfs->getfile(inum, info);
      if (ret != yfs_client::OK)
        return ret;
-     st.st_mode = S_IFREG | 0666;
+     st.st_mode = S_IFREG | 0666;  // -x
      st.st_nlink = 1;
      st.st_atime = info.atime;
      st.st_mtime = info.mtime;
@@ -215,12 +215,32 @@ yfs_client::status
 fuseserver_createhelper(fuse_ino_t parent, const char *name,
                         mode_t mode, struct fuse_entry_param *e)
 {
-  // In yfs, timeouts are always set to 0.0, and generations are always set to 0
+  printf("fuseserver_createhelper %08lx %s\n", parent, name);
+
+  // In yfs, timeouts are always set to 0.0, and generations are always set
+  // to 0.
   e->attr_timeout = 0.0;
   e->entry_timeout = 0.0;
   e->generation = 0;
-  // You fill this in for Lab 2
-  return yfs_client::NOENT;
+
+  yfs_client::inum child = 0;
+  struct stat st;
+  yfs_client::status status;
+
+  status = yfs->create(parent, true /* is_file */, name, child);
+  if (status != yfs_client::OK) {
+    return status;
+  }
+
+  status = getattr(child, st);
+  if (status != yfs_client::OK) {
+    return status;
+  }
+
+  e->ino = child;
+  e->attr = st;
+
+  return yfs_client::OK;
 }
 
 void
@@ -266,17 +286,35 @@ void
 fuseserver_lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
   struct fuse_entry_param e;
-  // In yfs, timeouts are always set to 0.0, and generations are always set to 0
+
+  // In yfs, timeouts are always set to 0.0, and generations are always set
+  // to 0.
   e.attr_timeout = 0.0;
   e.entry_timeout = 0.0;
   e.generation = 0;
-  bool found = false;
 
-  // You fill this in for Lab 2
-  if (found)
-    fuse_reply_entry(req, &e);
-  else
-    fuse_reply_err(req, ENOENT);
+  yfs_client::inum child = 0;
+  struct stat st;
+  yfs_client::status status;
+
+  status = yfs->lookup(parent, name, child);
+  if (status != yfs_client::OK) {
+    goto bad;
+  }
+
+  status = getattr(child, st);
+  if (status != yfs_client::OK) {
+    goto bad;
+  }
+
+  e.ino = child;
+  e.attr = st;
+
+  fuse_reply_entry(req, &e);
+  return;
+
+ bad:
+  fuse_reply_err(req, ENOENT);
 }
 
 
@@ -301,7 +339,7 @@ void dirbuf_add(struct dirbuf *b, const char *name, fuse_ino_t ino)
 int reply_buf_limited(fuse_req_t req, const char *buf, size_t bufsize,
                       off_t off, size_t maxsize)
 {
-  if ((size_t)off < bufsize)
+  if ((size_t) off < bufsize)
     return fuse_reply_buf(req, buf + off, min(bufsize - off, maxsize));
   else
     return fuse_reply_buf(req, NULL, 0);
@@ -332,9 +370,19 @@ fuseserver_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
 
   memset(&b, 0, sizeof(b));
 
+  yfs_client::status status;
+  std::vector<yfs_client::dirent> ents;
 
-  // You fill this in for Lab 2
+  status = yfs->readdir(inum, ents);
+  if (status != yfs_client::OK) {
+    fuse_reply_err(req, ENOTDIR);
+    return;
+  }
 
+  for (std::vector<yfs_client::dirent>::iterator it = ents.begin();
+        it != ents.end(); ++it) {
+    dirbuf_add(&b, it->name.c_str(), it->inum);
+  }
 
   reply_buf_limited(req, b.p, b.size, off, size);
   free(b.p);
@@ -480,8 +528,7 @@ main(int argc, char *argv[])
 
   struct fuse_session *se;
 
-  se = fuse_lowlevel_new(&args, &fuseserver_oper, sizeof(fuseserver_oper),
-       NULL);
+  se = fuse_lowlevel_new(&args, &fuseserver_oper, sizeof(fuseserver_oper), NULL);
   if (se == 0) {
     fprintf(stderr, "fuse_lowlevel_new failed\n");
     exit(1);
