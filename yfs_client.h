@@ -54,6 +54,8 @@ class yfs_client {
   status readdir(inum, std::vector<dirent> &);
   status lookup(inum, const char *, inum &);
   status create(inum, bool, const char *, inum &);
+
+  status unlink(inum, const char *);
 };
 
 #endif

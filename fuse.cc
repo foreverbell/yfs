@@ -416,19 +416,39 @@ fuseserver_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
                  mode_t mode)
 {
   struct fuse_entry_param e;
-  // In yfs, timeouts are always set to 0.0, and generations are always set to 0
+
+  // In yfs, timeouts are always set to 0.0, and generations are always set
+  // to 0.
   e.attr_timeout = 0.0;
   e.entry_timeout = 0.0;
   e.generation = 0;
-  // Suppress compiler warning of unused e.
-  (void) e;
 
-  // You fill this in for Lab 3
-#if 0
+  yfs_client::inum child = 0;
+  struct stat st;
+  yfs_client::status status;
+
+  status = yfs->create(parent, false /* is_file */, name, child);
+  if (status != yfs_client::OK) {
+    goto bad;
+  }
+
+  status = getattr(child, st);
+  if (status != yfs_client::OK) {
+    goto bad;
+  }
+
+  e.ino = child;
+  e.attr = st;
+
   fuse_reply_entry(req, &e);
-#else
-  fuse_reply_err(req, ENOSYS);
-#endif
+  return;
+
+ bad:
+  if (status == yfs_client::EXIST) {
+    fuse_reply_err(req, EEXIST);
+  } else {
+    fuse_reply_err(req, ENOENT);
+  }
 }
 
 //
@@ -441,11 +461,11 @@ fuseserver_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
 void
 fuseserver_unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-
-  // You fill this in for Lab 3
-  // Success:	fuse_reply_err(req, 0);
-  // Not found:	fuse_reply_err(req, ENOENT);
-  fuse_reply_err(req, ENOSYS);
+  if (yfs->unlink(parent, name) == yfs_client::OK) {
+    fuse_reply_err(req, 0);
+  } else {
+    fuse_reply_err(req, ENOENT);
+  }
 }
 
 void

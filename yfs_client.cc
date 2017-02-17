@@ -6,6 +6,7 @@
 #include <iostream>
 #include <random>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -279,11 +280,36 @@ yfs_client::create(inum parent, bool is_file, const char *name, inum &child)
   buf.append("/");
   buf.append(filename(child));
 
-  // XXX: concurrent put
-  status = ec->put(parent, buf);
+  return ec->put(parent, buf);
+}
+
+yfs_client::status
+yfs_client::unlink(inum parent, const char *name)
+{
+  if (!isdir(parent)) {
+    return NOENT;
+  }
+
+  extent_protocol::status status;
+  std::string buf;
+
+  status = ec->get(parent, buf);
   if (status != OK) {
     return status;
   }
 
-  return OK;
+  size_t file_begin = buf.find(std::string("/") + name + "/");
+  size_t file_end;
+
+  if (file_begin == std::string::npos) {
+    return NOENT;
+  }
+  file_end = buf.find("/", file_begin + strlen(name) + 2);
+  if (file_end == std::string::npos) {
+    file_end = buf.length();
+  }
+
+  buf.erase(file_begin, file_end - file_begin);
+
+  return ec->put(parent, buf);
 }

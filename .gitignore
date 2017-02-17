@@ -2,6 +2,8 @@ extent_server
 lock_demo
 lock_server
 lock_tester
+test-lab-3-b
+test-lab-3-c
 yfs_client
 
 rpc/librpc.a
