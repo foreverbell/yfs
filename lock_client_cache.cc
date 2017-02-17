@@ -9,8 +9,8 @@
 #include "tprintf.h"
 
 
-lock_client_cache::lock_client_cache(std::string xdst, 
-				     class lock_release_user *_lu)
+lock_client_cache::lock_client_cache(
+    std::string xdst, class lock_release_user *_lu)
   : lock_client(xdst), lu(_lu)
 {
   rpcs *rlsrpc = new rpcs(0);
@@ -35,7 +35,6 @@ lock_protocol::status
 lock_client_cache::release(lock_protocol::lockid_t lid)
 {
   return lock_protocol::OK;
-
 }
 
 rlock_protocol::status
@@ -53,6 +52,3 @@ lock_client_cache::retry_handler(lock_protocol::lockid_t lid,
   int ret = rlock_protocol::OK;
   return ret;
 }
-
-
-

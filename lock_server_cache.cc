@@ -9,22 +9,17 @@
 #include "handle.h"
 #include "tprintf.h"
 
+lock_server_cache::lock_server_cache() { }
 
-lock_server_cache::lock_server_cache()
-{
-}
-
-
-int lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, 
-                               int &)
+int
+lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, int &)
 {
   lock_protocol::status ret = lock_protocol::OK;
   return ret;
 }
 
 int 
-lock_server_cache::release(lock_protocol::lockid_t lid, std::string id, 
-         int &r)
+lock_server_cache::release(lock_protocol::lockid_t lid, std::string id, int &r)
 {
   lock_protocol::status ret = lock_protocol::OK;
   return ret;
@@ -37,4 +32,3 @@ lock_server_cache::stat(lock_protocol::lockid_t lid, int &r)
   r = nacquire;
   return lock_protocol::OK;
 }
-
