@@ -6,6 +6,7 @@
 #include "extent_client.h"
 #include <vector>
 #include <random>
+#include <memory>
 
 #include "lock_protocol.h"
 #include "lock_client.h"
@@ -13,6 +14,8 @@
 class yfs_client {
  private:
   extent_client *ec;
+  lock_client *lc;
+
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution;
 

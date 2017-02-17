@@ -11,11 +11,29 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+// RAII for yfs distributed lock.
+class scoped_lock {
+ private:
+  lock_client *lc;
+  lock_protocol::lockid_t lid;
+
+ public:
+  scoped_lock(lock_client *lc, lock_protocol::lockid_t lid)
+    : lc(lc), lid(lid) {
+    lc->acquire(lid);
+  }
+
+  ~scoped_lock() {
+    lc->release(lid);
+  }
+};
+
 yfs_client::yfs_client(std::string extent_dst, std::string lock_dst)
   : generator(time(NULL)), distribution(2, (1u << 31) - 1)
 {
   // It will cause disaster if we run two concurrent yfs_clients with the same seed!
   ec = new extent_client(extent_dst);
+  lc = new lock_client(lock_dst);
 }
 
 yfs_client::inum
@@ -59,9 +77,8 @@ yfs_client::isdir(inum inum)
 yfs_client::status
 yfs_client::getfile(inum inum, fileinfo &fin)
 {
+  scoped_lock sl(lc, inum);
   yfs_client::status r = OK;
-  // You modify this function for Lab 3
-  // - hold and release the file lock
 
   printf("getfile %016llx\n", inum);
   extent_protocol::attr a;
@@ -83,9 +100,8 @@ yfs_client::getfile(inum inum, fileinfo &fin)
 yfs_client::status
 yfs_client::getdir(inum inum, dirinfo &din)
 {
+  scoped_lock sl(lc, inum);
   yfs_client::status r = OK;
-  // You modify this function for Lab 3
-  // - hold and release the directory lock
 
   printf("getdir %016llx\n", inum);
   extent_protocol::attr a;
@@ -107,6 +123,8 @@ yfs_client::read(inum inum, size_t size, off_t offset, std::string &output)
   if (!isfile(inum)) {
     return NOENT;
   }
+
+  scoped_lock sl(lc, inum);
 
   extent_protocol::status status;
   std::string buf;
@@ -135,6 +153,8 @@ yfs_client::write(inum inum, const char *input, size_t size, off_t offset)
     return NOENT;
   }
 
+  scoped_lock sl(lc, inum);
+
   extent_protocol::status status;
   std::string buf;
 
@@ -162,6 +182,8 @@ yfs_client::setattr(inum inum, size_t size)
     return NOENT;
   }
 
+  scoped_lock sl(lc, inum);
+
   extent_protocol::status status;
   std::string buf;
 
@@ -186,6 +208,8 @@ yfs_client::readdir(inum parent, std::vector<dirent> &ents)
   if (!isdir(parent)) {
     return NOENT;
   }
+
+  scoped_lock sl(lc, parent);
 
   extent_protocol::status status;
   std::string buf;
@@ -257,6 +281,8 @@ yfs_client::create(inum parent, bool is_file, const char *name, inum &child)
     return NOENT;
   }
 
+  scoped_lock sl(lc, parent);
+
   extent_protocol::status status;
   std::string buf;
 
@@ -291,6 +317,8 @@ yfs_client::unlink(inum parent, const char *name)
   if (!isdir(parent)) {
     return NOENT;
   }
+
+  scoped_lock sl(lc, parent);
 
   extent_protocol::status status;
   std::string buf;
