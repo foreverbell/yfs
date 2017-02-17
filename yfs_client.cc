@@ -4,7 +4,6 @@
 #include "lock_client.h"
 #include <sstream>
 #include <iostream>
-#include <random>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -13,7 +12,9 @@
 #include <fcntl.h>
 
 yfs_client::yfs_client(std::string extent_dst, std::string lock_dst)
+  : generator(time(NULL)), distribution(2, (1u << 31) - 1)
 {
+  // It will cause disaster if we run two concurrent yfs_clients with the same seed!
   ec = new extent_client(extent_dst);
 }
 
@@ -36,11 +37,8 @@ yfs_client::filename(inum inum)
 
 // Pray that we have no collision!
 yfs_client::inum
-new_inum(bool is_file)
+yfs_client::new_inum(bool is_file)
 {
-  static std::default_random_engine generator;
-  static std::uniform_int_distribution<int> distribution(2, (1u << 31) - 1);
-
   return distribution(generator) | (is_file ? 0x80000000 : 0x0);
 }
 
@@ -209,6 +207,9 @@ yfs_client::readdir(inum parent, std::vector<dirent> &ents)
       return IOERR;  // corrupted data
     }
     slash_2 = buf.find("/", slash_1 + 1);
+    if (slash_2 == std::string::npos) {
+      slash_2 = buf.size();
+    }
 
     dirent ent;
 
@@ -217,7 +218,7 @@ yfs_client::readdir(inum parent, std::vector<dirent> &ents)
 
     ents.emplace_back(std::move(ent));
 
-    if (slash_2 == std::string::npos) {
+    if (slash_2 == buf.size()) {
       break;
     } else {
       last_slash = slash_2;
@@ -286,6 +287,7 @@ yfs_client::create(inum parent, bool is_file, const char *name, inum &child)
 yfs_client::status
 yfs_client::unlink(inum parent, const char *name)
 {
+  // Do *not* allow unlinking of a directory.
   if (!isdir(parent)) {
     return NOENT;
   }
@@ -306,7 +308,7 @@ yfs_client::unlink(inum parent, const char *name)
   }
   file_end = buf.find("/", file_begin + strlen(name) + 2);
   if (file_end == std::string::npos) {
-    file_end = buf.length();
+    file_end = buf.size();
   }
 
   buf.erase(file_begin, file_end - file_begin);

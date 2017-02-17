@@ -5,6 +5,7 @@
 //#include "yfs_protocol.h"
 #include "extent_client.h"
 #include <vector>
+#include <random>
 
 #include "lock_protocol.h"
 #include "lock_client.h"
@@ -12,6 +13,8 @@
 class yfs_client {
  private:
   extent_client *ec;
+  std::default_random_engine generator;
+  std::uniform_int_distribution<int> distribution;
 
  public:
   typedef unsigned long long inum;
@@ -35,8 +38,9 @@ class yfs_client {
   };
 
  private:
-  static std::string filename(inum);
-  static inum n2i(std::string);
+  std::string filename(inum);
+  inum n2i(std::string);
+  inum new_inum(bool);
 
  public:
   yfs_client(std::string, std::string);
