@@ -34,23 +34,22 @@ lock_server::acquire(int clt, lock_protocol::lockid_t lid, int &r)
 
   ScopedLock ml(&m);
 
-  while (true) {
-    std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
+  // Inserting an new element from std::map does not invalid other iterators,
+  // it is safe to find it before we wait the conditional variable.
+  std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
 
-    if (it == locks.end()) {
-      locks[lid] = lock_t();
-      it = locks.find(lid);
-    }
-
-    if (it->second.status == lock_status::free) {
-      it->second.status = lock_status::locked;
-      it->second.nacquire += 1;
-
-      return lock_protocol::OK;
-    } else { // acquired
-      pthread_cond_wait(&it->second.free_c, &m);
-    }
+  if (it == locks.end()) {
+    locks[lid] = lock_t();
+    it = locks.find(lid);
   }
+
+  while (it->second.status == lock_status::locked) {
+    pthread_cond_wait(&it->second.free_c, &m);
+  }
+
+  // Now the lock is free.
+  it->second.status = lock_status::locked;
+  it->second.nacquire += 1;
 
   return lock_protocol::OK;
 }
