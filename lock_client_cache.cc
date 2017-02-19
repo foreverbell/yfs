@@ -36,7 +36,7 @@ lock_client_cache::acquire_impl(
   it->second.status = lock_status::acquiring;
 
   lock_protocol::status ret;
-  int r;
+  int r = 0;
 
   while (true) {
     pthread_mutex_unlock(&m);
@@ -55,6 +55,9 @@ lock_client_cache::acquire_impl(
 
   if (ret == lock_protocol::OK) {
     it->second.status = lock_status::free;
+    if (r) { // other clients are also waiting for the lock.
+      it->second.revoked = true;
+    }
   } else {
     it->second.status = lock_status::none; // fail to acquire, keep it as none.
   }

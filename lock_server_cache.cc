@@ -15,7 +15,7 @@ lock_server_cache::lock_server_cache()
 }
 
 lock_protocol::status
-lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, int &)
+lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, int &r)
 {
   ScopedLock ml(&m);
 
@@ -33,7 +33,8 @@ lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, int &)
         it->second.status = lock_status::lent;
         it->second.nacquire += 1;
         it->second.owner = id;
-        tprintf("lock %lld is owned by %s.\n", lid, it->second.owner.c_str());
+        r = !it->second.queue.empty();
+        tprintf("lock %lld is owned by %s now.\n", lid, it->second.owner.c_str());
         return lock_protocol::OK;
       }
 
@@ -84,16 +85,10 @@ lock_server_cache::release(lock_protocol::lockid_t lid, std::string id, int &)
   it->second.status = lock_status::free;
   it->second.owner.clear();
 
-  // Let two clients retry, so we can revoke client 1 when client 2 is acquiring
-  // the lock.
-  std::vector<std::string> top2;
-
-  for (int i = 0; i < 2 && !it->second.queue.empty(); ++i) {
-    top2.push_back(it->second.queue.front());
+  if (!it->second.queue.empty()) {
+    std::string next = it->second.queue.front();
     it->second.queue.pop();
-  }
 
-  for (const std::string &next : top2) {
     handle h(next);
     rpcc *cl = h.safebind();
     int r;

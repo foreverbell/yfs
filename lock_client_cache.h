@@ -65,7 +65,7 @@ class lock_client_cache : public lock_client {
   rlock_protocol::status revoke_handler(lock_protocol::lockid_t, int &);
   rlock_protocol::status retry_handler(lock_protocol::lockid_t, int &);
 
-  const char *id_() const { return id.c_str(); }
+  const char *id_() const { return id.c_str(); } // XXX: remove
 
  private:
   lock_protocol::status acquire_impl(
