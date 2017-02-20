@@ -19,7 +19,7 @@ lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, int &r)
 {
   ScopedLock ml(&m);
 
-  tprintf("acquire request of lock %lld, client %s.\n", lid, id.c_str());
+  tprintf("acquire request of lock %lld from client %s.\n", lid, id.c_str());
 
   std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
   if (it == locks.end()) {
@@ -70,7 +70,7 @@ lock_server_cache::release(lock_protocol::lockid_t lid, std::string id, int &)
 {
   ScopedLock ml(&m);
 
-  tprintf("release request of lock %lld, client %s.\n", lid, id.c_str());
+  tprintf("release request of lock %lld from client %s.\n", lid, id.c_str());
 
   std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
   if (it == locks.end() || it->second.status == lock_status::free) {
@@ -107,7 +107,16 @@ lock_server_cache::release(lock_protocol::lockid_t lid, std::string id, int &)
 lock_protocol::status
 lock_server_cache::stat(lock_protocol::lockid_t lid, int &r)
 {
+  ScopedLock ml(&m);
+
   tprintf("stat request of lock %lld.\n", lid);
-  r = 0;
+
+  std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
+  if (it == locks.end()) {
+    r = 0;
+  } else {
+    r = it->second.nacquire;
+  }
+
   return lock_protocol::OK;
 }

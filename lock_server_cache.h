@@ -44,8 +44,8 @@ class lock_server_cache {
  private:
   enum lock_status {
     free,    // server has the free lock
-    lent,    // lock is lent to some client @owner.
-    revoked, // lock is lent but being revoked.
+    lent,    // lock is lent to some client @owner
+    revoked, // lock is lent but being revoked
   };
 
   struct lock_t {
@@ -63,8 +63,9 @@ class lock_server_cache {
  public:
   lock_server_cache();
   lock_protocol::status stat(lock_protocol::lockid_t, int &);
-  lock_protocol::status acquire(lock_protocol::lockid_t, std::string id, int &);
-  lock_protocol::status release(lock_protocol::lockid_t, std::string id, int &);
+  // The return value indicates if there are other clients trying to acquire the lock.
+  lock_protocol::status acquire(lock_protocol::lockid_t, std::string, int &);
+  lock_protocol::status release(lock_protocol::lockid_t, std::string, int &);
 };
 
 #endif
