@@ -9,12 +9,12 @@
 #include <memory>
 
 #include "lock_protocol.h"
-#include "lock_client.h"
+#include "lock_client_cache.h"
 
 class yfs_client {
  private:
   extent_client *ec;
-  lock_client *lc;
+  lock_client_cache *lc;
 
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution;

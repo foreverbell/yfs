@@ -33,7 +33,7 @@ yfs_client::yfs_client(std::string extent_dst, std::string lock_dst)
 {
   // It will cause disaster if we run two concurrent yfs_clients with the same seed!
   ec = new extent_client(extent_dst);
-  lc = new lock_client(lock_dst);
+  lc = new lock_client_cache(lock_dst);
 }
 
 yfs_client::inum
