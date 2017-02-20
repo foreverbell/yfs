@@ -33,6 +33,8 @@ lock_client_cache::acquire_impl(
     lock_protocol::lockid_t lid,
     std::map<lock_protocol::lockid_t, lock_t>::iterator it)
 {
+  VERIFY(it->second.status == lock_status::none);
+
   it->second.status = lock_status::acquiring;
 
   lock_protocol::status ret;
@@ -70,6 +72,10 @@ lock_client_cache::release_impl(
     lock_protocol::lockid_t lid,
     std::map<lock_protocol::lockid_t, lock_t>::iterator it)
 {
+  lock_status status = it->second.status;
+
+  VERIFY(status == lock_status::locked || status == lock_status::free);
+
   it->second.status = lock_status::releasing;
 
   lock_protocol::status ret;
@@ -81,9 +87,10 @@ lock_client_cache::release_impl(
 
   if (ret == lock_protocol::OK) {
     it->second.owner = 0;
+    it->second.revoked = false;
     it->second.status = lock_status::none;
   } else {
-    it->second.status = lock_status::locked; // fail to release, keep it as locked.
+    it->second.status = status; // fail to release, keep it as old status.
   }
 
   return ret;
@@ -161,7 +168,6 @@ lock_client_cache::release(lock_protocol::lockid_t lid)
     if (ret != lock_protocol::OK) {
       return ret;
     }
-    it->second.revoked = false;
   } else {
     it->second.status = lock_status::free;
     it->second.owner = 0;
@@ -188,6 +194,8 @@ lock_client_cache::revoke_handler(lock_protocol::lockid_t lid, int &)
     if (release_impl(lid, it) != lock_protocol::OK) {
       return rlock_protocol::RPCERR;
     }
+
+    pthread_cond_signal(&it->second.free_c);
   } else {
     it->second.revoked = true;
   }

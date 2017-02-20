@@ -1,6 +1,8 @@
 #ifndef TPRINTF_H
 #define TPRINTF_H
 
+#include <sys/time.h>
+
 #define tprintf(args...)                                    \
   do { \
     struct timeval tv;                                      \

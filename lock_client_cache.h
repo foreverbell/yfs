@@ -4,6 +4,7 @@
 #define lock_client_cache_h
 
 #include <string>
+#include <map>
 #include "lock_protocol.h"
 #include "rpc.h"
 #include "lock_client.h"
@@ -37,7 +38,7 @@ class lock_client_cache : public lock_client {
     pthread_cond_t free_c;  // notify when status == lock_status::free || none
     pthread_cond_t retry_c; // notify when should_retry == true
 
-    pthread_t owner;     // thread id of owner
+    pthread_t owner;        // thread id of owner
 
     lock_t()
       : status(lock_status::none),

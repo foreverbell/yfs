@@ -74,7 +74,7 @@ lock_server_cache::release(lock_protocol::lockid_t lid, std::string id, int &)
 
   std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
   if (it == locks.end() || it->second.status == lock_status::free) {
-    tprintf("lock %lld is not found or free lock.\n", lid);
+    tprintf("lock %lld is not found or free.\n", lid);
     return lock_protocol::RPCERR;
   }
   if (it->second.owner != id) {
