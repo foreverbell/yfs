@@ -78,6 +78,10 @@ lock_client_cache::release_impl(
 
   it->second.status = lock_status::releasing;
 
+  if (lu != NULL) {
+    lu->dorelease(lid);
+  }
+
   lock_protocol::status ret;
   int r;
 

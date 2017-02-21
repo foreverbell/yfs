@@ -1,7 +1,6 @@
 // the extent server implementation
 
 #include "extent_server.h"
-#include <chrono>
 #include <fcntl.h>
 #include <sstream>
 #include <stdio.h>
@@ -9,16 +8,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-static unsigned int time() // <ctime> time(NULL);
-{
-  return std::chrono::system_clock::now().time_since_epoch() / std::chrono::seconds(1);
-}
-
 extent_server::extent_server()
 {
   pthread_mutex_init(&m, NULL);
 
-  // FUSE assumes that the inum for the root directory is 0x00000001.
+  // FUSE assumes that the inum for the root directory is 1.
   int r;
   put(1, "", r);
 }
@@ -29,7 +23,7 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
 
   ScopedLock ml(&m);
   extent_t ext;
-  unsigned int t = time();
+  unsigned int t = time_since_epoch();
 
   ext.attr.size = buf.size();
   ext.attr.atime = t;
@@ -54,7 +48,7 @@ int extent_server::get(extent_protocol::extentid_t id, std::string &buf)
     return extent_protocol::IOERR;
   }
 
-  it->second.attr.atime = time();
+  it->second.attr.atime = time_since_epoch();
   buf = it->second.ext;
 
   return extent_protocol::OK;
@@ -85,8 +79,8 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
   std::map<extent_protocol::extentid_t, extent_t>::iterator it;
 
   it = exts.find(id);
-  if (it == exts.end()) {
-    return extent_protocol::IOERR;
+  if (it == exts.end()) { // Silently OK if not found.
+    return extent_protocol::OK;
   }
 
   exts.erase(it);

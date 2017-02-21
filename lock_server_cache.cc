@@ -38,26 +38,23 @@ lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, int &r)
         return lock_protocol::OK;
       }
 
-      case lock_status::lent: {
-        it->second.queue.push(id);
-
-        handle h(it->second.owner);
-        rpcc *cl = h.safebind();
-        int r;
-
-        if (cl) {
-          tprintf("revoking lock %lld owned by client %s.\n", lid, it->second.owner.c_str());
-          it->second.status = lock_status::revoked;
-          pthread_mutex_unlock(&m);
-          cl->call(rlock_protocol::revoke, lid, r);
-          pthread_mutex_lock(&m);
-        }
-
-        return lock_protocol::RETRY;
-      }
-
+      case lock_status::lent:
       case lock_status::revoked: {
         it->second.queue.push(id);
+
+        if (it->second.status == lock_status::lent) {
+          handle h(it->second.owner);
+          rpcc *cl = h.safebind();
+          int r;
+
+          if (cl) {
+            tprintf("revoking lock %lld owned by client %s.\n", lid, it->second.owner.c_str());
+            it->second.status = lock_status::revoked;
+            pthread_mutex_unlock(&m);
+            cl->call(rlock_protocol::revoke, lid, r);
+            pthread_mutex_lock(&m);
+          }
+        }
 
         return lock_protocol::RETRY;
       }

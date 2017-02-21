@@ -49,15 +49,13 @@ class lock_client_cache : public lock_client {
   };
 
   class lock_release_user *lu;
-//  int rlock_port;
-//  std::string hostname;
   std::string id;
   std::map<lock_protocol::lockid_t, lock_t> locks;
 
   pthread_mutex_t m;
 
  public:
-  lock_client_cache(std::string xdst, class lock_release_user *l = 0);
+  lock_client_cache(std::string xdst, class lock_release_user *l = NULL);
   virtual ~lock_client_cache() { }
 
   int stat(lock_protocol::lockid_t);

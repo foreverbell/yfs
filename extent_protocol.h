@@ -4,6 +4,7 @@
 #define extent_protocol_h
 
 #include "rpc.h"
+#include <chrono>
 
 class extent_protocol {
  public:
@@ -24,6 +25,12 @@ class extent_protocol {
     unsigned int size;
   };
 };
+
+inline unsigned int
+time_since_epoch() // <ctime> time(NULL)
+{
+  return std::chrono::system_clock::now().time_since_epoch() / std::chrono::seconds(1);
+}
 
 inline unmarshall &
 operator>>(unmarshall &u, extent_protocol::attr &a)
