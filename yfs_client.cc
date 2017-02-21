@@ -14,26 +14,40 @@
 // RAII for yfs distributed lock.
 class scoped_lock {
  private:
-  lock_client *lc;
+  lock_client_cache *lc;
   lock_protocol::lockid_t lid;
+  bool flush;
 
  public:
-  scoped_lock(lock_client *lc, lock_protocol::lockid_t lid)
-    : lc(lc), lid(lid) {
+  scoped_lock(lock_client_cache *lc, lock_protocol::lockid_t lid, bool flush = false)
+    : lc(lc), lid(lid), flush(flush) {
     lc->acquire(lid);
   }
 
   ~scoped_lock() {
-    lc->release(lid);
+    lc->release(lid, flush);
   }
+};
+
+class lock_release_user_impl : public lock_release_user {
+ public:
+  lock_release_user_impl(extent_client *ec) : ec(ec) { }
+
+  virtual void dorelease(lock_protocol::lockid_t id) {
+    VERIFY(ec->flush(id) == extent_protocol::OK);
+  }
+
+ private:
+  extent_client *ec;
 };
 
 yfs_client::yfs_client(std::string extent_dst, std::string lock_dst)
   : generator(time(NULL)), distribution(2, (1u << 31) - 1)
 {
   // It will cause disaster if we run two concurrent yfs_clients with the same seed!
+  // TODO: GC.
   ec = new extent_client(extent_dst);
-  lc = new lock_client_cache(lock_dst);
+  lc = new lock_client_cache(lock_dst, new lock_release_user_impl(ec));
 }
 
 yfs_client::inum
@@ -329,17 +343,28 @@ yfs_client::unlink(inum parent, const char *name)
   }
 
   size_t file_begin = buf.find(std::string("/") + name + "/");
-  size_t file_end;
+  size_t file_mid, file_end;
 
   if (file_begin == std::string::npos) {
     return NOENT;
   }
-  file_end = buf.find("/", file_begin + strlen(name) + 2);
+  file_mid = file_begin + strlen(name) + 2;
+  file_end = buf.find("/", file_mid);
   if (file_end == std::string::npos) {
     file_end = buf.size();
   }
 
-  buf.erase(file_begin, file_end - file_begin);
+  inum inum = n2i(buf.substr(file_mid, file_end - file_mid));
 
+  // Flush the deleted file (i.e. return the lock to server).
+  // Otherwise the deleted file will lost tracking.
+  scoped_lock sl_2(lc, inum, true /* flush */);
+
+  status = ec->remove(inum);
+  if (status != OK) {
+    return status;
+  }
+
+  buf.erase(file_begin, file_end - file_begin);
   return ec->put(parent, buf);
 }

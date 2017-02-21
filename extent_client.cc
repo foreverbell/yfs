@@ -169,6 +169,22 @@ extent_client::remove(extent_protocol::extentid_t eid)
 extent_protocol::status
 extent_client::flush(extent_protocol::extentid_t eid)
 {
-  // TODO: Implementation.
+  printf("flushing extent %lld.\n", eid);
+
+  std::map<extent_protocol::extentid_t, extent_t>::iterator it;
+
+  it = exts_cache.find(eid);
+  if (it == exts_cache.end()) {
+    return extent_protocol::OK;
+  }
+
+  if (it->second.removed) {
+    return remove_impl(eid);
+  } else if (it->second.dirty) {
+    return put_impl(eid);
+  } else {
+    exts_cache.erase(it);
+  }
+
   return extent_protocol::OK;
 }

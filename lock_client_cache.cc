@@ -150,8 +150,9 @@ lock_client_cache::acquire(lock_protocol::lockid_t lid)
   return lock_protocol::OK;
 }
 
+// Return the lock to server if @flush is true.
 lock_protocol::status
-lock_client_cache::release(lock_protocol::lockid_t lid)
+lock_client_cache::release(lock_protocol::lockid_t lid, bool flush)
 {
   ScopedLock ml(&m);
 
@@ -167,7 +168,7 @@ lock_client_cache::release(lock_protocol::lockid_t lid)
     return lock_protocol::RPCERR;
   }
 
-  if (it->second.revoked) {
+  if (it->second.revoked || flush) {
     ret = release_impl(lid, it);
     if (ret != lock_protocol::OK) {
       return ret;
@@ -180,6 +181,12 @@ lock_client_cache::release(lock_protocol::lockid_t lid)
   pthread_cond_signal(&it->second.free_c);
 
   return lock_protocol::OK;
+}
+
+lock_protocol::status
+lock_client_cache::release(lock_protocol::lockid_t lid)
+{
+  return release(lid, false /* flush */);
 }
 
 rlock_protocol::status
