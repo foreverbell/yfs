@@ -80,6 +80,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <unistd.h>
 
 #include "handle.h"
 #include "rsm.h"
@@ -230,7 +231,8 @@ rsm::statetransfer(std::string m)
 }
 
 bool
-rsm::statetransferdone(std::string m) {
+rsm::statetransferdone(std::string m)
+{
   // You fill this in for Lab 7
   // - Inform primary that this slave has synchronized for vid_insync
   return true;
@@ -238,7 +240,8 @@ rsm::statetransferdone(std::string m) {
 
 
 bool
-rsm::join(std::string m) {
+rsm::join(std::string m)
+{
   handle h(m);
   int ret;
   rsm_protocol::joinres r;
