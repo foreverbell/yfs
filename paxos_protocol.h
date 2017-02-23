@@ -4,8 +4,8 @@
 #include "rpc.h"
 
 struct prop_t {
-  unsigned n;
-  std::string m;
+  unsigned n;    // proposal number
+  std::string m; // node identifier
 };
 
 class paxos_protocol {
@@ -27,6 +27,11 @@ class paxos_protocol {
   struct prepareres {
     bool oldinstance;
     bool accept;
+
+    // valid if oldinstance = true.
+    std::string instance_v;
+
+    // valid if accept = true.
     prop_t n_a;
     std::string v_a;
   };
@@ -41,7 +46,6 @@ class paxos_protocol {
     unsigned instance;
     std::string v;
   };
-
 };
 
 inline unmarshall &

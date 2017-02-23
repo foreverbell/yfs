@@ -19,6 +19,7 @@ class acceptor {
   rpcs *pxs;
   paxos_change *cfg;
   std::string me;
+
   pthread_mutex_t pxs_mutex;
 
   // Acceptor state
@@ -30,23 +31,19 @@ class acceptor {
 
   void commit_wo(unsigned instance, std::string v);
 
-  paxos_protocol::status preparereq(
-      std::string src, paxos_protocol::preparearg a,
-      paxos_protocol::prepareres &r);
+  paxos_protocol::status preparereq(std::string src,
+      paxos_protocol::preparearg a, paxos_protocol::prepareres &r);
 
-  paxos_protocol::status acceptreq(
-      std::string src, paxos_protocol::acceptarg a,
-      bool &r);
+  paxos_protocol::status acceptreq(std::string src,
+      paxos_protocol::acceptarg a, bool &r);
 
-  paxos_protocol::status decidereq(
-      std::string src, paxos_protocol::decidearg a,
-      int &r);
+  paxos_protocol::status decidereq(std::string src,
+      paxos_protocol::decidearg a, int &r);
 
   friend class log;
 
  public:
-  acceptor(class paxos_change *cfg, bool _first, std::string _me,
-      std::string _value);
+  acceptor(class paxos_change *cfg, bool _first, std::string _me, std::string _value);
   ~acceptor() { }
 
   void commit(unsigned instance, std::string v);
@@ -56,6 +53,7 @@ class acceptor {
   unsigned instance() { return instance_h; }
   std::string value(unsigned instance) { return values[instance]; }
   rpcs *get_rpcs() { return pxs; }
+  void set_n_h(const prop_t &new_n_h) { n_h = new_n_h; }
   prop_t get_n_h() { return n_h; }
   unsigned get_instance_h() { return instance_h; }
 };
@@ -67,7 +65,7 @@ class proposer {
  private:
   log *l;
   paxos_change *cfg;
-  acceptor *acc;
+  acceptor *acc;  // stores acceptor in proposer
   std::string me;
   bool break1;
   bool break2;
@@ -80,22 +78,18 @@ class proposer {
 
   void setn();
 
-  bool prepare(
-      unsigned instance, std::vector<std::string> &accepts,
+  bool prepare(unsigned instance, std::vector<std::string> &accepts,
       std::vector<std::string> nodes, std::string &v);
 
-  void accept(
-      unsigned instance, std::vector<std::string> &accepts,
+  void accept(unsigned instance, std::vector<std::string> &accepts,
       std::vector<std::string> nodes, std::string v);
 
-  void decide(
-      unsigned instance, std::vector<std::string> accepts, std::string v);
+  void decide(unsigned instance, std::vector<std::string> accepts, std::string v);
 
   void breakpoint1();
   void breakpoint2();
 
-  bool majority(
-      const std::vector<std::string> &l1, const std::vector<std::string> &l2);
+  bool majority(const std::vector<std::string> &l1, const std::vector<std::string> &l2);
 
   friend class log;
 
