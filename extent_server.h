@@ -16,13 +16,15 @@ class extent_server {
   int get(extent_protocol::extentid_t id, std::string &);
   int getattr(extent_protocol::extentid_t id, extent_protocol::attr &);
   int remove(extent_protocol::extentid_t id, int &);
+
+ private:
+  struct extent_t {
+    std::string ext;
+    extent_protocol::attr attr;
+  };
+
+  pthread_mutex_t m;
+  std::map<extent_protocol::extentid_t, extent_t> exts;
 };
 
 #endif 
-
-
-
-
-
-
-

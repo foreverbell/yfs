@@ -8,9 +8,8 @@
 // to views, the log contains all views since the beginning of time.
 
 log::log(acceptor *_acc, std::string _me)
-  : pxs (_acc)
+  : name("paxos-" + _me + ".log"), pxs (_acc)
 {
-  name = "paxos-" + _me + ".log";
   logread();
 }
 
@@ -31,8 +30,7 @@ log::logread(void)
       getline(from, v);
       pxs->values[instance] = v;
       pxs->instance_h = instance;
-      printf ("logread: instance: %d w. v = %s\n", instance, 
-	      pxs->values[instance].c_str());
+      printf("logread: instance: %d w. v = %s\n", instance, pxs->values[instance].c_str());
       pxs->v_a.clear();
       pxs->n_h.n = 0;
       pxs->n_a.n = 0;
@@ -47,8 +45,7 @@ log::logread(void)
       from.get();
       getline(from, v);
       pxs->v_a = v;
-      printf("logread: prop update %d(%s) with v = %s\n", pxs->n_a.n, 
-	     pxs->n_a.m.c_str(), pxs->v_a.c_str());
+      printf("logread: prop update %d(%s) with v = %s\n", pxs->n_a.n, pxs->n_a.m.c_str(), pxs->v_a.c_str());
     } else {
       printf("logread: unknown log record\n");
       VERIFY(0);
@@ -129,4 +126,3 @@ log::logaccept(prop_t n, std::string v)
   f << "\n";
   f.close();
 }
-

@@ -8,6 +8,7 @@
 #include "jsl_log.h"
 #include <signal.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
