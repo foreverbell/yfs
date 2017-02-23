@@ -132,8 +132,8 @@ rsm::rsm(std::string _first, std::string _me)
   testsvr->reg(rsm_test_protocol::breakpoint, this, &rsm::breakpointreq);
 
   {
-      ScopedLock ml(&rsm_mutex);
-      VERIFY(pthread_create(&th, NULL, &recoverythread, (void *) this) == 0);
+    ScopedLock ml(&rsm_mutex);
+    VERIFY(pthread_create(&th, NULL, &recoverythread, (void *) this) == 0);
   }
 }
 
@@ -148,12 +148,12 @@ rsm::recovery()
   while (1) {
     while (!cfg->ismember(cfg->myaddr(), vid_commit)) {
       if (join(primary)) {
-	tprintf("recovery: joined\n");
+        tprintf("recovery: joined\n");
         commit_change_wo(cfg->vid());
       } else {
-	VERIFY(pthread_mutex_unlock(&rsm_mutex)==0);
-	sleep (30); // XXX make another node in cfg primary?
-	VERIFY(pthread_mutex_lock(&rsm_mutex)==0);
+        VERIFY(pthread_mutex_unlock(&rsm_mutex) == 0);
+        sleep(30); // XXX make another node in cfg primary?
+        VERIFY(pthread_mutex_lock(&rsm_mutex) == 0);
       }
     }
     vid_insync = vid_commit;
@@ -248,17 +248,15 @@ rsm::join(std::string m)
 
   tprintf("rsm::join: %s mylast (%d,%d)\n", m.c_str(), last_myvs.vid, 
           last_myvs.seqno);
-  VERIFY(pthread_mutex_unlock(&rsm_mutex)==0);
+  VERIFY(pthread_mutex_unlock(&rsm_mutex) == 0);
   rpcc *cl = h.safebind();
   if (cl != 0) {
-    ret = cl->call(rsm_protocol::joinreq, cfg->myaddr(), last_myvs, 
-		   r, rpcc::to(120000));
+    ret = cl->call(rsm_protocol::joinreq, cfg->myaddr(), last_myvs, r, rpcc::to(120000));
   }
-  VERIFY(pthread_mutex_lock(&rsm_mutex)==0);
+  VERIFY(pthread_mutex_lock(&rsm_mutex) == 0);
 
   if (cl == 0 || ret != rsm_protocol::OK) {
-    tprintf("rsm::join: couldn't reach %s %p %d\n", m.c_str(), 
-	   cl, ret);
+    tprintf("rsm::join: couldn't reach %s %p %d\n", m.c_str(), cl, ret);
     return false;
   }
   tprintf("rsm::join: succeeded %s\n", r.log.c_str());
@@ -283,7 +281,7 @@ rsm::commit_change_wo(unsigned vid)
   if (vid <= vid_commit)
     return;
   tprintf("commit_change: new view (%d)  last vs (%d,%d) %s insync %d\n", 
-	 vid, last_myvs.vid, last_myvs.seqno, primary.c_str(), insync);
+          vid, last_myvs.vid, last_myvs.seqno, primary.c_str(), insync);
   vid_commit = vid;
   inviewchange = true;
   set_primary(vid);
@@ -362,8 +360,8 @@ rsm::joinreq(std::string m, viewstamp last, rsm_protocol::joinres &r)
   int ret = rsm_protocol::OK;
 
   ScopedLock ml(&rsm_mutex);
-  tprintf("joinreq: src %s last (%d,%d) mylast (%d,%d)\n", m.c_str(), 
-	 last.vid, last.seqno, last_myvs.vid, last_myvs.seqno);
+  tprintf("joinreq: src %s last (%d,%d) mylast (%d,%d)\n", m.c_str(),
+          last.vid, last.seqno, last_myvs.vid, last_myvs.seqno);
   if (cfg->ismember(m, vid_commit)) {
     tprintf("joinreq: is still a member\n");
     r.log = cfg->dump();
@@ -401,8 +399,7 @@ rsm::client_members(int i, std::vector<std::string> &r)
   m = cfg->get_view(vid_commit);
   m.push_back(primary);
   r = m;
-  tprintf("rsm::client_members return %s m %s\n", print_members(m).c_str(),
-	 primary.c_str());
+  tprintf("rsm::client_members return %s m %s\n", print_members(m).c_str(), primary.c_str());
   return rsm_client_protocol::OK;
 }
 
@@ -452,9 +449,10 @@ rsm::net_repair_wo(bool heal)
   m = cfg->get_view(vid_commit);
   for (unsigned i  = 0; i < m.size(); i++) {
     if (m[i] != cfg->myaddr()) {
-        handle h(m[i]);
-	tprintf("rsm::net_repair_wo: %s %d\n", m[i].c_str(), heal);
-	if (h.safebind()) h.safebind()->set_reachable(heal);
+      handle h(m[i]);
+      tprintf("rsm::net_repair_wo: %s %d\n", m[i].c_str(), heal);
+      if (h.safebind())
+        h.safebind()->set_reachable(heal);
     }
   }
   rsmrpc->set_reachable(heal);
@@ -465,7 +463,7 @@ rsm::test_net_repairreq(int heal, int &r)
 {
   ScopedLock ml(&rsm_mutex);
   tprintf("rsm::test_net_repairreq: %d (dopartition %d, partitioned %d)\n", 
-	 heal, dopartition, partitioned);
+          heal, dopartition, partitioned);
   if (heal) {
     net_repair_wo(heal);
     partitioned = false;
@@ -519,7 +517,3 @@ rsm::breakpointreq(int b, int &r)
   else r = rsm_test_protocol::ERR;
   return r;
 }
-
-
-
-

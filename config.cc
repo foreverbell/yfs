@@ -50,7 +50,7 @@ heartbeatthread(void *x)
 config::config(std::string _first, std::string _me, config_view_change *_vc) 
   : myvid (0), first (_first), me (_me), vc (_vc)
 {
-  VERIFY (pthread_mutex_init(&cfg_mutex, NULL) == 0);
+  VERIFY(pthread_mutex_init(&cfg_mutex, NULL) == 0);
   VERIFY(pthread_cond_init(&config_cond, NULL) == 0);  
 
   std::ostringstream ost;
@@ -64,12 +64,12 @@ config::config(std::string _first, std::string _me, config_view_change *_vc)
   pxsrpc->reg(paxos_protocol::heartbeat, this, &config::heartbeat);
 
   {
-      ScopedLock ml(&cfg_mutex);
+    ScopedLock ml(&cfg_mutex);
 
-      reconstruct();
+    reconstruct();
 
-      pthread_t th;
-      VERIFY (pthread_create(&th, NULL, &heartbeatthread, (void *) this) == 0);
+    pthread_t th;
+    VERIFY(pthread_create(&th, NULL, &heartbeatthread, (void *) this) == 0);
   }
 }
 
@@ -88,7 +88,7 @@ config::get_view(unsigned instance)
   return get_view_wo(instance);
 }
 
-// caller should hold cfg_mutex
+// Caller should hold cfg_mutex.
 std::vector<std::string>
 config::get_view_wo(unsigned instance)
 {
@@ -120,7 +120,7 @@ config::value(std::vector<std::string> m)
   return ost.str();
 }
 
-// caller should hold cfg_mutex
+// Caller should hold cfg_mutex.
 void
 config::reconstruct()
 {
@@ -141,8 +141,7 @@ config::paxos_commit(unsigned instance, std::string value)
   ScopedLock ml(&cfg_mutex);
 
   newmem = members(value);
-  tprintf("config::paxos_commit: %d: %s\n", instance, 
-	 print_members(newmem).c_str());
+  tprintf("config::paxos_commit: %d: %s\n", instance, print_members(newmem).c_str());
 
   for (unsigned i = 0; i < mems.size(); i++) {
     tprintf("config::paxos_commit: is %s still a member?\n", mems[i].c_str());
@@ -156,9 +155,9 @@ config::paxos_commit(unsigned instance, std::string value)
   myvid = instance;
   if (vc) {
     unsigned vid = myvid;
-    VERIFY(pthread_mutex_unlock(&cfg_mutex)==0);
+    VERIFY(pthread_mutex_unlock(&cfg_mutex) == 0);
     vc->commit_change(vid);
-    VERIFY(pthread_mutex_lock(&cfg_mutex)==0);
+    VERIFY(pthread_mutex_lock(&cfg_mutex) == 0);
   }
 }
 
@@ -177,23 +176,31 @@ config::add(std::string new_m, unsigned vid)
 {
   std::vector<std::string> m;
   std::vector<std::string> curm;
+
   ScopedLock ml(&cfg_mutex);
+
   if (vid != myvid)
     return false;
+
   tprintf("config::add %s\n", new_m.c_str());
+
   m = mems;
   m.push_back(new_m);
   curm = mems;
+
   std::string v = value(m);
   int nextvid = myvid + 1;
-  VERIFY(pthread_mutex_unlock(&cfg_mutex)==0);
+
+  VERIFY(pthread_mutex_unlock(&cfg_mutex) == 0);
   bool r = pro->run(nextvid, curm, v);
-  VERIFY(pthread_mutex_lock(&cfg_mutex)==0);
+  VERIFY(pthread_mutex_lock(&cfg_mutex) == 0);
+
   if (r) {
     tprintf("config::add: proposer returned success\n");
   } else {
     tprintf("config::add: proposer returned failure\n");
   }
+
   return r;
 }
 
@@ -202,21 +209,27 @@ bool
 config::remove_wo(std::string m)
 {
   tprintf("config::remove: myvid %d remove? %s\n", myvid, m.c_str());
+
   std::vector<std::string> n;
+
   for (unsigned i = 0; i < mems.size(); i++) {
     if (mems[i] != m) n.push_back(mems[i]);
   }
+
   std::string v = value(n);
   std::vector<std::string> cmems = mems;
   int nextvid = myvid + 1;
-  VERIFY(pthread_mutex_unlock(&cfg_mutex)==0);
+
+  VERIFY(pthread_mutex_unlock(&cfg_mutex) == 0);
   bool r = pro->run(nextvid, cmems, v);
-  VERIFY(pthread_mutex_lock(&cfg_mutex)==0);
+  VERIFY(pthread_mutex_lock(&cfg_mutex) == 0);
+
   if (r) {
     tprintf("config::remove: proposer returned success\n");
   } else {
     tprintf("config::remove: proposer returned failure\n");
   }
+
   return r;
 }
 
@@ -230,13 +243,14 @@ config::heartbeater()
   bool stable;
   unsigned vid;
   std::vector<std::string> cmems;
+
   ScopedLock ml(&cfg_mutex);
   
   while (1) {
-
     gettimeofday(&now, NULL);
     next_timeout.tv_sec = now.tv_sec + 3;
     next_timeout.tv_nsec = 0;
+
     tprintf("heartbeater: go to sleep\n");
     pthread_cond_timedwait(&config_cond, &cfg_mutex, &next_timeout);
 
@@ -250,28 +264,28 @@ config::heartbeater()
       continue;
     }
 
-    //find the node with the smallest id
+    // find the node with the smallest id.
     m = me;
     for (unsigned i = 0; i < cmems.size(); i++) {
       if (m > cmems[i])
-	m = cmems[i];
+        m = cmems[i];
     }
 
     if (m == me) {
-      //if i am the one with smallest id, ping the rest of the nodes
+      // if i am the one with smallest id, ping the rest of the nodes.
       for (unsigned i = 0; i < cmems.size(); i++) {
-	if (cmems[i] != me) {
-	  if ((h = doheartbeat(cmems[i])) != OK) {
-	    stable = false;
-	    m = cmems[i];
-	    break;
-	  }
-	}
+        if (cmems[i] != me) {
+          if ((h = doheartbeat(cmems[i])) != OK) {
+            stable = false;
+            m = cmems[i];
+            break;
+          }
+        }
       }
     } else {
-      //the rest of the nodes ping the one with smallest id
-	if ((h = doheartbeat(m)) != OK) 
-	    stable = false;
+      // the rest of the nodes ping the one with smallest id
+      if ((h = doheartbeat(m)) != OK) 
+        stable = false;
     }
 
     if (!stable && vid == myvid) {
@@ -284,9 +298,11 @@ paxos_protocol::status
 config::heartbeat(std::string m, unsigned vid, int &r)
 {
   ScopedLock ml(&cfg_mutex);
+
   int ret = paxos_protocol::ERR;
   r = (int) myvid;
   tprintf("heartbeat from %s(%d) myvid %d\n", m.c_str(), vid, myvid);
+
   if (vid == myvid) {
     ret = paxos_protocol::OK;
   } else if (pro->isrunning()) {
@@ -295,6 +311,7 @@ config::heartbeat(std::string m, unsigned vid, int &r)
   } else {
     ret = paxos_protocol::ERR;
   }
+
   return ret;
 }
 
@@ -307,26 +324,33 @@ config::doheartbeat(std::string m)
   heartbeat_t res = OK;
 
   tprintf("doheartbeater to %s (%d)\n", m.c_str(), vid);
+
   handle h(m);
-  VERIFY(pthread_mutex_unlock(&cfg_mutex)==0);
+
+  VERIFY(pthread_mutex_unlock(&cfg_mutex) == 0);
+
   rpcc *cl = h.safebind();
   if (cl) {
-    ret = cl->call(paxos_protocol::heartbeat, me, vid, r, 
-	           rpcc::to(1000));
+    ret = cl->call(paxos_protocol::heartbeat, me, vid, r, rpcc::to(1000));
   } 
-  VERIFY(pthread_mutex_lock(&cfg_mutex)==0);
+
+  VERIFY(pthread_mutex_lock(&cfg_mutex) == 0);
+
   if (ret != paxos_protocol::OK) {
-    if (ret == rpc_const::atmostonce_failure || 
-	ret == rpc_const::oldsrv_failure) {
+    if (ret == rpc_const::atmostonce_failure || ret == rpc_const::oldsrv_failure) {
       mgr.delete_handle(m);
     } else {
-      tprintf("doheartbeat: problem with %s (%d) my vid %d his vid %d\n", 
-	     m.c_str(), ret, vid, r);
-      if (ret < 0) res = FAILURE;
-      else res = VIEWERR;
+      tprintf("doheartbeat: problem with %s (%d) my vid %d his vid %d\n", m.c_str(), ret, vid, r);
+      if (ret < 0) {
+        res = FAILURE;
+      } else {
+        res = VIEWERR;
+      }
     }
   }
+
   tprintf("doheartbeat done %d\n", res);
+
   return res;
 }
 
