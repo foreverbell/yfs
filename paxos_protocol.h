@@ -25,6 +25,7 @@ class paxos_protocol {
   };
 
   struct prepareres {
+    // oldinstance and accept can not both be true.
     bool oldinstance;
     bool accept;
 
@@ -34,6 +35,9 @@ class paxos_protocol {
     // valid if accept = true.
     prop_t n_a;
     std::string v_a;
+
+    // valid if oldinstance = accept = false.
+    prop_t n_h;
   };
 
   struct acceptarg {

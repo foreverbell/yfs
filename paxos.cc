@@ -156,6 +156,10 @@ proposer::prepare(unsigned instance, std::vector<std::string> &accepts,
 {
   paxos_protocol::status status;
   prop_t highest;
+  paxos_protocol::preparearg arg;
+
+  arg.instance = instance;
+  arg.n = my_n;
 
   accepts.clear();
   v.clear();
@@ -165,11 +169,7 @@ proposer::prepare(unsigned instance, std::vector<std::string> &accepts,
     rpcc *cl = h.safebind();
 
     if (cl != NULL) {
-      paxos_protocol::preparearg arg;
       paxos_protocol::prepareres res;
-
-      arg.instance = instance;
-      arg.n = my_n;
 
       status = cl->call(paxos_protocol::preparereq, me, arg, res, rpcc::to(1000));
       if (status != paxos_protocol::OK) {
@@ -192,7 +192,9 @@ proposer::prepare(unsigned instance, std::vector<std::string> &accepts,
         }
       } else {
         // Proposal is too low, rejected.
-        // TODO: consider bumping proposal id.
+        // Optimization: Bump our proposal id so we can quickly match it in
+        // next prepare.
+        acc->set_n_h(res.n_h);
       }
     }
   }
@@ -207,6 +209,11 @@ proposer::accept(unsigned instance, std::vector<std::string> &accepts,
                  std::vector<std::string> nodes, std::string v)
 {
   paxos_protocol::status status;
+  paxos_protocol::acceptarg arg;
+
+  arg.instance = instance;
+  arg.n = my_n;
+  arg.v = std::move(v);
 
   accepts.clear();
 
@@ -215,12 +222,7 @@ proposer::accept(unsigned instance, std::vector<std::string> &accepts,
     rpcc *cl = h.safebind();
 
     if (cl != NULL) {
-      paxos_protocol::acceptarg arg;
       bool res = false;
-
-      arg.instance = instance;
-      arg.n = my_n;
-      arg.v = v;
 
       status = cl->call(paxos_protocol::acceptreq, me, arg, res, rpcc::to(1000));
       if (status != paxos_protocol::OK) {
@@ -240,17 +242,17 @@ void
 proposer::decide(unsigned instance, std::vector<std::string> accepts, std::string v)
 {
   paxos_protocol::status status;
+  paxos_protocol::decidearg arg;
+
+  arg.instance = instance;
+  arg.v = std::move(v);
 
   for (const std::string &node : accepts) {
     handle h(node);
     rpcc *cl = h.safebind();
 
     if (cl != NULL) {
-      paxos_protocol::decidearg arg;
       int res;
-
-      arg.instance = instance;
-      arg.v = v;
 
       status = cl->call(paxos_protocol::decidereq, me, arg, res, rpcc::to(1000));
       if (status != paxos_protocol::OK) {
@@ -319,6 +321,8 @@ acceptor::preparereq(std::string src, paxos_protocol::preparearg a,
   }
 
   // Rejected.
+  r.n_h = n_h;
+
   return paxos_protocol::OK;
 }
 
