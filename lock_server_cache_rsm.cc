@@ -9,7 +9,6 @@
 #include "handle.h"
 #include "tprintf.h"
 
-
 static void *
 revokethread(void *x)
 {
@@ -30,10 +29,8 @@ lock_server_cache_rsm::lock_server_cache_rsm(class rsm *_rsm)
   : rsm (_rsm)
 {
   pthread_t th;
-  int r = pthread_create(&th, NULL, &revokethread, (void *) this);
-  VERIFY (r == 0);
-  r = pthread_create(&th, NULL, &retrythread, (void *) this);
-  VERIFY (r == 0);
+  VERIFY(pthread_create(&th, NULL, &revokethread, (void *) this) == 0);
+  VERIFY(pthread_create(&th, NULL, &retrythread, (void *) this) == 0);
 }
 
 void
@@ -56,8 +53,9 @@ lock_server_cache_rsm::retryer()
 }
 
 
-int lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id, 
-             lock_protocol::xid_t xid, int &)
+int
+lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
+                               lock_protocol::xid_t xid, int &)
 {
   lock_protocol::status ret = lock_protocol::OK;
   return ret;
@@ -65,7 +63,7 @@ int lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
 
 int 
 lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id, 
-         lock_protocol::xid_t xid, int &r)
+                               lock_protocol::xid_t xid, int &r)
 {
   lock_protocol::status ret = lock_protocol::OK;
   return ret;
@@ -91,4 +89,3 @@ lock_server_cache_rsm::stat(lock_protocol::lockid_t lid, int &r)
   r = nacquire;
   return lock_protocol::OK;
 }
-

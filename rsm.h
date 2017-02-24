@@ -11,19 +11,20 @@
 #include <arpa/inet.h>
 #include "config.h"
 
-
 class rsm : public config_view_change {
  private:
   void reg1(int proc, handler *);
+
  protected:
   std::map<int, handler *> procs;
   config *cfg;
   class rsm_state_transfer *stf;
   rpcs *rsmrpc;
+
   // On slave: expected viewstamp of next invoke request
   // On primary: viewstamp for the next request from rsm_client
   viewstamp myvs;
-  viewstamp last_myvs;   // Viewstamp of the last executed request
+  viewstamp last_myvs;  // Viewstamp of the last executed request
   std::string primary;
   bool insync; 
   bool inviewchange;
@@ -60,6 +61,7 @@ class rsm : public config_view_change {
   std::string find_highest(viewstamp &vs, std::string &m, unsigned &vid);
   bool sync_with_backups();
   bool sync_with_primary();
+
   void net_repair_wo(bool heal);
   void breakpoint1();
   void breakpoint2();
@@ -76,54 +78,59 @@ class rsm : public config_view_change {
   void commit_change(unsigned vid);
 
   template<class S, class A1, class R>
-    void reg(int proc, S*, int (S::*meth)(const A1 a1, R &));
+  void reg(int proc, S*, int (S::*meth)(const A1 a1, R &));
+
   template<class S, class A1, class A2, class R>
-    void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, R &));
+  void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, R &));
+
   template<class S, class A1, class A2, class A3, class R>
-    void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, 
-            const A3 a3, R &));
+  void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, R &));
+
   template<class S, class A1, class A2, class A3, class A4, class R>
-    void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, 
-            const A3 a3, const A4 a4, R &));
+  void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, R &));
+
   template<class S, class A1, class A2, class A3, class A4, class A5, class R>
-    void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, 
-            const A3 a3, const A4 a4, 
-            const A5 a5, R &));
+  void reg(int proc, S*, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, const A5 a5, R &));
 };
 
 template<class S, class A1, class R> void
-  rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, R & r))
+rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, R & r))
 {
   class h1 : public handler {
-  private:
+   private:
     S * sob;
     int (S::*meth)(const A1 a1, R & r);
-  public:
-  h1(S *xsob, int (S::*xmeth)(const A1 a1, R & r))
+
+   public:
+    h1(S *xsob, int (S::*xmeth)(const A1 a1, R & r))
       : sob(xsob), meth(xmeth) { }
+
     int fn(unmarshall &args, marshall &ret) {
       A1 a1;
       R r;
       args >> a1;
       VERIFY(args.okdone());
-      int b = (sob->*meth)(a1,r);
+      int b = (sob->*meth)(a1, r);
       ret << r;
       return b;
     }
   };
+
   reg1(proc, new h1(sob, meth));
 }
 
 template<class S, class A1, class A2, class R> void
-  rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, R & r))
+rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, R & r))
 {
- class h1 : public handler {
-  private:
+  class h1 : public handler {
+   private:
     S * sob;
     int (S::*meth)(const A1 a1, const A2 a2, R & r);
-  public:
-  h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, R & r))
-    : sob(xsob), meth(xmeth) { }
+
+   public:
+    h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, R & r))
+      : sob(xsob), meth(xmeth) { }
+
     int fn(unmarshall &args, marshall &ret) {
       A1 a1;
       A2 a2;
@@ -131,25 +138,27 @@ template<class S, class A1, class A2, class R> void
       args >> a1;
       args >> a2;
       VERIFY(args.okdone());
-      int b = (sob->*meth)(a1,a2,r);
+      int b = (sob->*meth)(a1, a2, r);
       ret << r;
       return b;
     }
   };
+
   reg1(proc, new h1(sob, meth));
 }
 
 template<class S, class A1, class A2, class A3, class R> void
-  rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, 
-             const A3 a3, R & r))
+rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, R & r))
 {
- class h1 : public handler {
-  private:
+  class h1 : public handler {
+   private:
     S * sob;
     int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, R & r);
-  public:
-  h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, const A3 a3, R & r))
-    : sob(xsob), meth(xmeth) { }
+
+   public:
+    h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, const A3 a3, R & r))
+      : sob(xsob), meth(xmeth) { }
+
     int fn(unmarshall &args, marshall &ret) {
       A1 a1;
       A2 a2;
@@ -159,26 +168,27 @@ template<class S, class A1, class A2, class A3, class R> void
       args >> a2;
       args >> a3;
       VERIFY(args.okdone());
-      int b = (sob->*meth)(a1,a2,a3,r);
+      int b = (sob->*meth)(a1, a2, a3, r);
       ret << r;
       return b;
     }
   };
+
   reg1(proc, new h1(sob, meth));
 }
 
 template<class S, class A1, class A2, class A3, class A4, class R> void
-  rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, 
-             const A3 a3, const A4 a4, R & r))
+rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, R & r))
 {
- class h1 : public handler {
-  private:
+  class h1 : public handler {
+   private:
     S * sob;
     int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, R & r);
-  public:
-  h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, const A3 a3, 
-            const A4 a4, R & r))
-    : sob(xsob), meth(xmeth) { }
+
+   public:
+    h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, R & r))
+      : sob(xsob), meth(xmeth) { }
+
     int fn(unmarshall &args, marshall &ret) {
       A1 a1;
       A2 a2;
@@ -190,29 +200,28 @@ template<class S, class A1, class A2, class A3, class A4, class R> void
       args >> a3;
       args >> a4;
       VERIFY(args.okdone());
-      int b = (sob->*meth)(a1,a2,a3,a4,r);
+      int b = (sob->*meth)(a1, a2, a3, a4, r);
       ret << r;
       return b;
     }
   };
+
   reg1(proc, new h1(sob, meth));
 }
 
 
 template<class S, class A1, class A2, class A3, class A4, class A5, class R> void
-  rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, 
-             const A3 a3, const A4 a4, 
-             const A5 a5, R & r))
+rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, const A5 a5, R & r))
 {
- class h1 : public handler {
-  private:
+  class h1 : public handler {
+   private:
     S * sob;
-    int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, 
-       const A5 a5, R & r);
-  public:
-  h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, const A3 a3, 
-            const A4 a4, const A5 a5, R & r))
-    : sob(xsob), meth(xmeth) { }
+    int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, const A5 a5, R & r);
+
+   public:
+    h1(S *xsob, int (S::*xmeth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, const A5 a5, R & r))
+      : sob(xsob), meth(xmeth) { }
+
     int fn(unmarshall &args, marshall &ret) {
       A1 a1;
       A2 a2;
@@ -225,11 +234,12 @@ template<class S, class A1, class A2, class A3, class A4, class A5, class R> voi
       args >> a3;
       args >> a4;
       VERIFY(args.okdone());
-      int b = (sob->*meth)(a1,a2,a3,a4,a5,r);
+      int b = (sob->*meth)(a1, a2, a3, a4, a5, r);
       ret << r;
       return b;
     }
   };
+
   reg1(proc, new h1(sob, meth));
 }
 

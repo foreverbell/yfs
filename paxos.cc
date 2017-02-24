@@ -118,6 +118,7 @@ proposer::run(int instance, std::vector<std::string> cur_nodes, std::string newv
       if (v.size() == 0)
         v = newv;
 
+      // Break point for test purpose.
       breakpoint1();
 
       nodes = accepts;
@@ -127,6 +128,7 @@ proposer::run(int instance, std::vector<std::string> cur_nodes, std::string newv
       if (majority(cur_nodes, accepts)) {
         tprintf("paxos::manager: received a majority of accept responses\n");
 
+        // Break point for test purpose.
         breakpoint2();
 
         decide(instance, accepts, v);

@@ -204,7 +204,7 @@ config::add(std::string new_m, unsigned vid)
   return r;
 }
 
-// caller should hold cfg_mutex
+// Caller should hold cfg_mutex.
 bool
 config::remove_wo(std::string m)
 {
@@ -251,7 +251,7 @@ config::heartbeater()
     next_timeout.tv_sec = now.tv_sec + 3;
     next_timeout.tv_nsec = 0;
 
-    tprintf("heartbeater: go to sleep\n");
+    tprintf("heartbeater: go to sleep\n"); // wait for 3 seconds.
     pthread_cond_timedwait(&config_cond, &cfg_mutex, &next_timeout);
 
     stable = true;
@@ -260,7 +260,7 @@ config::heartbeater()
     tprintf("heartbeater: current membership %s\n", print_members(cmems).c_str());
 
     if (!isamember(me, cmems)) {
-      tprintf("heartbeater: not member yet; skip hearbeat\n");
+      tprintf("heartbeater: not member yet; skip heartbeat\n");
       continue;
     }
 
@@ -283,7 +283,7 @@ config::heartbeater()
         }
       }
     } else {
-      // the rest of the nodes ping the one with smallest id
+      // the rest of the nodes ping the one with smallest id.
       if ((h = doheartbeat(m)) != OK) 
         stable = false;
     }
@@ -294,6 +294,7 @@ config::heartbeater()
   }
 }
 
+// Heartbeat handler.
 paxos_protocol::status
 config::heartbeat(std::string m, unsigned vid, int &r)
 {
@@ -306,7 +307,7 @@ config::heartbeat(std::string m, unsigned vid, int &r)
   if (vid == myvid) {
     ret = paxos_protocol::OK;
   } else if (pro->isrunning()) {
-    VERIFY (vid == myvid + 1 || vid + 1 == myvid);
+    VERIFY(vid == myvid + 1 || vid + 1 == myvid);
     ret = paxos_protocol::OK;
   } else {
     ret = paxos_protocol::ERR;
@@ -353,4 +354,3 @@ config::doheartbeat(std::string m)
 
   return res;
 }
-

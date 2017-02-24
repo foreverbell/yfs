@@ -1,7 +1,6 @@
 // lock client interface.
 
 #ifndef lock_client_cache_rsm_h
-
 #define lock_client_cache_rsm_h
 
 #include <string>
@@ -18,9 +17,8 @@
 class lock_release_user {
  public:
   virtual void dorelease(lock_protocol::lockid_t) = 0;
-  virtual ~lock_release_user() {};
+  virtual ~lock_release_user() { }
 };
-
 
 class lock_client_cache_rsm;
 
@@ -30,22 +28,23 @@ class lock_client_cache_rsm : public lock_client {
  private:
   rsm_client *rsmc;
   class lock_release_user *lu;
-  int rlock_port;
-  std::string hostname;
+//  int rlock_port;
+//  std::string hostname;
   std::string id;
   lock_protocol::xid_t xid;
+
  public:
   static int last_port;
-  lock_client_cache_rsm(std::string xdst, class lock_release_user *l = 0);
-  virtual ~lock_client_cache_rsm() {};
-  lock_protocol::status acquire(lock_protocol::lockid_t);
-  virtual lock_protocol::status release(lock_protocol::lockid_t);
-  void releaser();
-  rlock_protocol::status revoke_handler(lock_protocol::lockid_t, 
-				        lock_protocol::xid_t, int &);
-  rlock_protocol::status retry_handler(lock_protocol::lockid_t, 
-				       lock_protocol::xid_t, int &);
-};
 
+  lock_client_cache_rsm(std::string xdst, class lock_release_user *l = 0);
+  virtual ~lock_client_cache_rsm() { }
+
+  lock_protocol::status acquire(lock_protocol::lockid_t);
+  lock_protocol::status release(lock_protocol::lockid_t);
+  void releaser();
+
+  rlock_protocol::status revoke_handler(lock_protocol::lockid_t, lock_protocol::xid_t, int &);
+  rlock_protocol::status retry_handler(lock_protocol::lockid_t, lock_protocol::xid_t, int &);
+};
 
 #endif

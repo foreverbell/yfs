@@ -14,7 +14,7 @@
 
 static void
 force_exit(int) {
-    exit(0);
+  exit(0);
 }
 
 int
@@ -59,7 +59,7 @@ main(int argc, char *argv[])
 #else
   rsm rsm(argv[1], argv[2]);
   lock_server_cache_rsm ls(&rsm);
-  rsm.set_state_transfer((rsm_state_transfer *)&ls);
+  rsm.set_state_transfer((rsm_state_transfer *) &ls);
   rsm.reg(lock_protocol::acquire, &ls, &lock_server_cache_rsm::acquire);
   rsm.reg(lock_protocol::release, &ls, &lock_server_cache_rsm::release);
   rsm.reg(lock_protocol::stat, &ls, &lock_server_cache_rsm::stat);

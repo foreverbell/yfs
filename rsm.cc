@@ -158,9 +158,9 @@ rsm::recovery()
         tprintf("recovery: joined\n");
         commit_change_wo(cfg->vid());
       } else {
-	VERIFY(pthread_mutex_unlock(&rsm_mutex) == 0);
-	sleep(5); // XXX make another node in cfg primary?
-	VERIFY(pthread_mutex_lock(&rsm_mutex) == 0);
+        VERIFY(pthread_mutex_unlock(&rsm_mutex) == 0);
+        sleep(5); // XXX make another node in cfg primary?
+        VERIFY(pthread_mutex_lock(&rsm_mutex) == 0);
       }
     }
     vid_insync = vid_commit;
@@ -237,18 +237,20 @@ rsm::statetransfer(std::string m)
   rsm_protocol::transferres r;
   handle h(m);
   int ret;
-  tprintf("rsm::statetransfer: contact %s w. my last_myvs(%d,%d)\n", 
-	 m.c_str(), last_myvs.vid, last_myvs.seqno);
-  VERIFY(pthread_mutex_unlock(&rsm_mutex)==0);
+
+  tprintf("rsm::statetransfer: contact %s w. my last_myvs(%d,%d)\n",
+          m.c_str(), last_myvs.vid, last_myvs.seqno);
+
+  VERIFY(pthread_mutex_unlock(&rsm_mutex) == 0);
   rpcc *cl = h.safebind();
   if (cl) {
-    ret = cl->call(rsm_protocol::transferreq, cfg->myaddr(), 
-                             last_myvs, vid_insync, r, rpcc::to(1000));
+    ret = cl->call(rsm_protocol::transferreq, cfg->myaddr(), last_myvs, vid_insync, r, rpcc::to(1000));
   }
-  VERIFY(pthread_mutex_lock(&rsm_mutex)==0);
+  VERIFY(pthread_mutex_lock(&rsm_mutex) == 0);
+
   if (cl == 0 || ret != rsm_protocol::OK) {
-    tprintf("rsm::statetransfer: couldn't reach %s %lx %d\n", m.c_str(), 
-	   (long unsigned) cl, ret);
+    tprintf("rsm::statetransfer: couldn't reach %s %lx %d\n", m.c_str(),
+            (long unsigned) cl, ret);
     return false;
   }
   if (stf && last_myvs != r.last) {
@@ -256,7 +258,7 @@ rsm::statetransfer(std::string m)
   }
   last_myvs = r.last;
   tprintf("rsm::statetransfer transfer from %s success, vs(%d,%d)\n", 
-	 m.c_str(), last_myvs.vid, last_myvs.seqno);
+          m.c_str(), last_myvs.vid, last_myvs.seqno);
   return true;
 }
 
@@ -268,7 +270,6 @@ rsm::statetransferdone(std::string m)
   return true;
 }
 
-
 bool
 rsm::join(std::string m)
 {
@@ -278,6 +279,7 @@ rsm::join(std::string m)
 
   tprintf("rsm::join: %s mylast (%d,%d)\n", m.c_str(), last_myvs.vid, 
           last_myvs.seqno);
+
   VERIFY(pthread_mutex_unlock(&rsm_mutex) == 0);
   rpcc *cl = h.safebind();
   if (cl != 0) {
@@ -319,7 +321,6 @@ rsm::commit_change_wo(unsigned vid)
   if (cfg->ismember(cfg->myaddr(), vid_commit))
     breakpoint2();
 }
-
 
 void
 rsm::execute(int procno, std::string req, std::string &r)
@@ -375,9 +376,11 @@ rsm_protocol::transferres &r)
 {
   ScopedLock ml(&rsm_mutex);
   int ret = rsm_protocol::OK;
+
   // Code will be provided in Lab 7
   tprintf("transferreq from %s (%d,%d) vs (%d,%d)\n", src.c_str(), 
-	 last.vid, last.seqno, last_myvs.vid, last_myvs.seqno);
+          last.vid, last.seqno, last_myvs.vid, last_myvs.seqno);
+
   if (!insync || vid != vid_insync) {
      return rsm_protocol::BUSY;
   }
@@ -425,9 +428,11 @@ rsm::joinreq(std::string m, viewstamp last, rsm_protocol::joinres &r)
     // We cache vid_commit to avoid adding m to a view which already contains 
     // m due to race condition
     unsigned vid_cache = vid_commit;
+
     VERIFY (pthread_mutex_unlock(&rsm_mutex) == 0);
     bool succ = cfg->add(m, vid_cache);
     VERIFY (pthread_mutex_lock(&rsm_mutex) == 0);
+
     if (cfg->ismember(m, cfg->vid())) {
       r.log = cfg->dump();
       tprintf("joinreq: ret %d log %s\n:", ret, r.log.c_str());
@@ -449,6 +454,7 @@ rsm::client_members(int i, std::vector<std::string> &r)
 {
   std::vector<std::string> m;
   ScopedLock ml(&rsm_mutex);
+
   m = cfg->get_view(vid_commit);
   m.push_back(primary);
   r = m;
