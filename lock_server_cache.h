@@ -2,43 +2,11 @@
 #define lock_server_cache_h
 
 #include <map>
-#include <queue>
 #include <string>
-#include <unordered_set>
 #include "lock_protocol.h"
 #include "rpc.h"
 #include "lock_server.h"
-
-template <typename T>
-class uqueue { // queue with unique elements
- private:
-  std::queue<T> q;
-  std::unordered_set<T> h;
-
- public:
-  bool push(const T &x) {
-    if (h.count(x)) {
-      return false;
-    }
-    q.push(x);
-    h.insert(x);
-    return true;
-  }
-
-  T front() const {
-    return q.front();
-  }
-
-  void pop() {
-    T r = q.front();
-    h.erase(r);
-    q.pop();
-  }
-
-  bool empty() const {
-    return q.empty();
-  }
-};
+#include "uqueue.h"
 
 class lock_server_cache {
  private:
