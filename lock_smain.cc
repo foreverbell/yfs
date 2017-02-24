@@ -4,7 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#ifdef RSM
 #include "lock_server_cache_rsm.h"
+#else
+#include "lock_server_cache.h"
+#endif
 #include "paxos.h"
 #include "rsm.h"
 
@@ -31,10 +35,23 @@ main(int argc, char *argv[])
 
   srandom(getpid());
 
+#ifdef RSM
   if (argc != 3) {
     fprintf(stderr, "Usage: %s [master:]port [me:]port\n", argv[0]);
+    if (argc == 2) {
+      fprintf(stderr, "Only one port is specified, fall back to single node mode.\n");
+      argv[2] = argv[1];
+      argc = 3;
+    } else {
+      exit(1);
+    }
+  }
+#else
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s port\n", argv[0]);
     exit(1);
   }
+#endif
 
   char *count_env = getenv("RPC_COUNT");
   if (count_env != NULL) {
@@ -46,10 +63,9 @@ main(int argc, char *argv[])
   // server and the RSM.  In Lab 6, we disable the lock server and
   // implement Paxos.  In Lab 7, we will make the lock server use your
   // RSM layer.
-#define	RSM
 #ifdef RSM
 // You must comment out the next line once you are done with Step One.
-#define STEP_ONE 
+#define STEP_ONE
 #ifdef STEP_ONE
   rpcs server(atoi(argv[1]));
   lock_server_cache_rsm ls;

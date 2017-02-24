@@ -2,19 +2,29 @@
 #define yfs_client_h
 
 #include <string>
-//#include "yfs_protocol.h"
+// #include "yfs_protocol.h"
 #include "extent_client.h"
 #include <vector>
 #include <random>
 #include <memory>
 
 #include "lock_protocol.h"
+
+#ifdef RSM
+#include "lock_client_cache_rsm.h"
+#else
 #include "lock_client_cache.h"
+#endif
 
 class yfs_client {
  private:
   extent_client *ec;
+
+#ifdef RSM
+  lock_client_cache_rsm *lc;
+#else
   lock_client_cache *lc;
+#endif
 
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution;

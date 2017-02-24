@@ -1,7 +1,6 @@
 // yfs client.  implements FS operations using extent and lock server
 #include "yfs_client.h"
 #include "extent_client.h"
-#include "lock_client.h"
 #include <sstream>
 #include <iostream>
 #include <stdio.h>
@@ -12,22 +11,29 @@
 #include <fcntl.h>
 
 // RAII for yfs distributed lock.
-class scoped_lock {
+template <typename L>
+class scoped_lock_impl {
  private:
-  lock_client_cache *lc;
+  L *lc;
   lock_protocol::lockid_t lid;
   bool flush;
 
  public:
-  scoped_lock(lock_client_cache *lc, lock_protocol::lockid_t lid, bool flush = false)
+  scoped_lock_impl(L *lc, lock_protocol::lockid_t lid, bool flush = false)
     : lc(lc), lid(lid), flush(flush) {
     lc->acquire(lid);
   }
 
-  ~scoped_lock() {
+  ~scoped_lock_impl() {
     lc->release(lid, flush);
   }
 };
+
+#ifdef RSM
+using scoped_lock = scoped_lock_impl<lock_client_cache_rsm>;
+#else
+using scoped_lock = scoped_lock_impl<lock_client_cache>;
+#endif
 
 class lock_release_user_impl : public lock_release_user {
  public:
@@ -47,7 +53,11 @@ yfs_client::yfs_client(std::string extent_dst, std::string lock_dst)
   // It will cause disaster if we run two concurrent yfs_clients with the same seed!
   // TODO: GC.
   ec = new extent_client(extent_dst);
+#ifdef RSM
+  lc = new lock_client_cache_rsm(lock_dst, new lock_release_user_impl(ec));
+#else
   lc = new lock_client_cache(lock_dst, new lock_release_user_impl(ec));
+#endif
 }
 
 yfs_client::inum

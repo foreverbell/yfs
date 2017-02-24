@@ -116,7 +116,7 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
           task_t task;
           task.lid = lid;
           task.client = it->second.owner;
-          revoke_tasks.enq(std::move(task));
+          revoke_tasks.enq(std::move(task)); // XXX: are we master?
 
           it->second.status = lock_status::revoked;
         }
@@ -163,7 +163,7 @@ lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
     task_t task;
     task.client = std::move(next);
     task.lid = lid;
-    retry_tasks.enq(std::move(task));
+    retry_tasks.enq(std::move(task)); // XXX: are we master?
   }
 
   return lock_protocol::OK;
