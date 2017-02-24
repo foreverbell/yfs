@@ -25,7 +25,7 @@ class lock_client_cache_rsm;
 
 // Clients that caches locks.  The server can revoke locks using 
 // lock_revoke_server.
-class lock_client_cache_rsm : public lock_client {
+class lock_client_cache_rsm {
  private:
   rsm_client *rsmc;
 

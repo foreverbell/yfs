@@ -40,10 +40,12 @@ class rsm : public config_view_change {
   bool break2;
 
   rsm_client_protocol::status client_members(int i, std::vector<std::string> &r);
+
   rsm_protocol::status invoke(int proc, viewstamp vs, std::string mreq, int &dummy);
   rsm_protocol::status transferreq(std::string src, viewstamp last, unsigned vid, rsm_protocol::transferres &r);
   rsm_protocol::status transferdonereq(std::string m, unsigned vid, int &);
   rsm_protocol::status joinreq(std::string src, viewstamp last, rsm_protocol::joinres &r);
+
   rsm_test_protocol::status test_net_repairreq(int heal, int &r);
   rsm_test_protocol::status breakpointreq(int b, int &r);
 
@@ -54,11 +56,15 @@ class rsm : public config_view_change {
 
   void execute(int procno, std::string req, std::string &r);
   rsm_client_protocol::status client_invoke(int procno, std::string req, std::string &r);
+
   bool statetransfer(std::string m);
   bool statetransferdone(std::string m);
+
   bool join(std::string m);
   void set_primary(unsigned vid);
+
   std::string find_highest(viewstamp &vs, std::string &m, unsigned &vid);
+
   bool sync_with_backups();
   bool sync_with_primary();
 
@@ -208,7 +214,6 @@ rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, 
 
   reg1(proc, new h1(sob, meth));
 }
-
 
 template<class S, class A1, class A2, class A3, class A4, class A5, class R> void
 rsm::reg(int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, const A3 a3, const A4 a4, const A5 a5, R & r))

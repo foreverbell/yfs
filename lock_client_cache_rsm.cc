@@ -12,8 +12,9 @@
 
 int lock_client_cache_rsm::last_port = 0;
 
+// XXX: remove lock_client(xdst).
 lock_client_cache_rsm::lock_client_cache_rsm(std::string xdst, class lock_release_user *_lu)
-  : lock_client(xdst), lu(_lu)
+  : lu(_lu)
 {
   srand(time(NULL) ^ last_port);
   int rlock_port = ((rand() % 32000) | (0x1 << 10));
@@ -29,9 +30,7 @@ lock_client_cache_rsm::lock_client_cache_rsm(std::string xdst, class lock_releas
 
   pthread_mutex_init(&m, NULL);
 
-  // You fill this in Step Two, Lab 7
-  // - Create rsmc, and use the object to do RPC 
-  //   calls instead of the rpcc object of lock_client
+  rsmc = new rsm_client(xdst);
 }
 
 // We don't need releaser thread here. Check the step one guidance for details.
@@ -51,7 +50,7 @@ lock_client_cache_rsm::acquire_impl(
 
   while (true) {
     pthread_mutex_unlock(&m);
-    ret = cl->call(lock_protocol::acquire, lid, id, xid, r);
+    ret = rsmc->call(lock_protocol::acquire, lid, id, xid, r);
     pthread_mutex_lock(&m);
 
     if (ret == lock_protocol::OK || ret != lock_protocol::RETRY) {
@@ -95,7 +94,7 @@ lock_client_cache_rsm::release_impl(
   int r;
 
   pthread_mutex_unlock(&m);
-  ret = cl->call(lock_protocol::release, lid, id, xid, r);
+  ret = rsmc->call(lock_protocol::release, lid, id, xid, r);
   pthread_mutex_lock(&m);
 
   if (ret == lock_protocol::OK) {

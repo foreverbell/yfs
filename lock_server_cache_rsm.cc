@@ -44,6 +44,10 @@ lock_server_cache_rsm::revoker()
   while (true) {
     revoke_tasks.deq(&task);
 
+    if (!rsm->amiprimary()) { // only primary is allowed to contact client.
+      continue;
+    }
+
     handle h(task.client);
     rpcc *cl = h.safebind();
     int r;
@@ -63,6 +67,10 @@ lock_server_cache_rsm::retryer()
 
   while (true) {
     retry_tasks.deq(&task);
+
+    if (!rsm->amiprimary()) { // only primary is allowed to contact client.
+      continue;
+    }
 
     handle h(task.client);
     rpcc *cl = h.safebind();

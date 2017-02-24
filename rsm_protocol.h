@@ -6,7 +6,7 @@
 
 class rsm_client_protocol {
  public:
-  enum xxstatus { OK, ERR, NOTPRIMARY, BUSY};
+  enum xxstatus { OK, ERR, NOTPRIMARY, BUSY };
   typedef int status;
   enum rpc_numbers {
     invoke = 0x9001,
@@ -26,7 +26,7 @@ struct viewstamp {
 
 class rsm_protocol {
  public:
-  enum xxstatus { OK, ERR, BUSY};
+  enum xxstatus { OK, ERR, BUSY };
   typedef int status;
   enum rpc_numbers {
     invoke = 0x10001,
@@ -102,7 +102,7 @@ operator>>(unmarshall &u, rsm_protocol::joinres &r)
 
 class rsm_test_protocol {
  public:
-  enum xxstatus { OK, ERR};
+  enum xxstatus { OK, ERR };
   typedef int status;
   enum rpc_numbers {
     net_repair = 0x12001,
