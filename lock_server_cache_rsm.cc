@@ -106,8 +106,29 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
     it = locks.find(lid);
   }
 
-  // XXX: xid check.
-  it->second.last_xid = xid;
+  if (xid < it->second.client_ctx[id].last_xid) {
+    tprintf("stale acquire request of lock %lld from client %s.\n", lid, id.c_str());
+    return lock_protocol::STALE;
+  } else if (it->second.client_ctx[id].last_xid == xid) {
+    tprintf("fuck fuck aaa %lld.\n", xid);
+    const acquire_reply_t &reply = it->second.client_ctx[id].acquire_reply;
+
+    if (reply.status == lock_protocol::OK) {
+      r = reply.ret;
+    }
+    if (!reply.revoke.empty()) {
+      task_t task;
+      task.lid = lid;
+      task.client = reply.revoke;
+      revoke_tasks.enq(std::move(task));
+    }
+    return reply.status;
+  }
+
+  it->second.client_ctx[id].last_xid = xid;
+
+  acquire_reply_t &reply = it->second.client_ctx[id].acquire_reply;
+  reply.status = lock_protocol::OK;
 
   while (true) {
     switch (it->second.status) {
@@ -115,9 +136,12 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
         it->second.status = lock_status::lent;
         it->second.nacquire += 1;
         it->second.owner = id;
-        r = !it->second.queue.empty();
+
+        reply.ret = r = !it->second.queue.empty();
+
         tprintf("lock %lld is owned by %s now.\n", lid, it->second.owner.c_str());
-        return lock_protocol::OK;
+
+        return (reply.status = lock_protocol::OK);
       }
 
       case lock_status::lent:
@@ -131,12 +155,16 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
           revoke_tasks.enq(std::move(task));
 
           it->second.status = lock_status::revoked;
+
+          reply.revoke = it->second.owner;
         }
 
-        return lock_protocol::RETRY;
+        return (reply.status = lock_protocol::RETRY);
       }
     }
   }
+
+  return reply.status;
 }
 
 lock_protocol::status
@@ -153,16 +181,25 @@ lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
     return lock_protocol::RPCERR;
   }
 
-  // XXX: equality check
-  it->second.last_xid = xid;
+  if (xid < it->second.client_ctx[id].last_xid) {
+    tprintf("stale release request of lock %lld from client %s.\n", lid, id.c_str());
+    return lock_protocol::STALE;
+  } else if (xid == it->second.client_ctx[id].last_xid) {
+    tprintf("fuck fuck bbb %lld.\n", xid);
+    return it->second.client_ctx[id].release_reply.status;
+  }
+
+  it->second.client_ctx[id].last_xid = xid;
+
+  release_reply_t &reply = it->second.client_ctx[id].release_reply;
 
   if (it->second.status == lock_status::free) {
     tprintf("lock %lld is free.\n", lid);
-    return lock_protocol::RPCERR;
+    return (reply.status = lock_protocol::RPCERR);
   }
   if (it->second.owner != id) {
     tprintf("lock %lld is not owned by client %s.\n", lid, id.c_str());
-    return lock_protocol::RPCERR;
+    return (reply.status = lock_protocol::RPCERR);
   }
 
   it->second.status = lock_status::free;
@@ -178,7 +215,7 @@ lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
     retry_tasks.enq(std::move(task));
   }
 
-  return lock_protocol::OK;
+  return (reply.status = lock_protocol::OK);
 }
 
 std::string
@@ -187,7 +224,8 @@ lock_server_cache_rsm::marshal_state()
   ScopedLock ml(&m);
 
   marshall m;
-  std::map<lock_protocol::lockid_t, lock_t>::iterator iter_lock;
+  std::map<lock_protocol::lockid_t, lock_t>::const_iterator iter_lock;
+  std::map<std::string, client_context_t>::const_iterator iter_ctx;
 
   m << (int) locks.size();
 
@@ -205,7 +243,11 @@ lock_server_cache_rsm::marshal_state()
       m << q.front();
       q.pop();
     }
-    m << l.last_xid;
+
+    m << (int) l.client_ctx.size();
+    for (iter_ctx = l.client_ctx.begin(); iter_ctx != l.client_ctx.end(); ++iter_ctx) {
+      m << iter_ctx->first << iter_ctx->second;
+    }
   }
 
   return m.str();
@@ -217,12 +259,12 @@ lock_server_cache_rsm::unmarshal_state(std::string state)
   ScopedLock ml(&m);
 
   unmarshall u(state);
-  int map_size;
+  int lock_size, ctx_size;
 
   locks.clear();
 
-  u >> map_size;
-  for (int i = 0; i < map_size; ++i) {
+  u >> lock_size;
+  for (int i = 0; i < lock_size; ++i) {
     lock_protocol::lockid_t key;
     std::string elem;
     int size, status;
@@ -241,7 +283,15 @@ lock_server_cache_rsm::unmarshal_state(std::string state)
       u >> elem;
       l.queue.push(elem);
     }
-    u >> l.last_xid;
+
+    u >> ctx_size;
+    for (int j = 0; j < ctx_size; ++j) {
+      std::string client;
+      client_context_t ctx;
+
+      u >> client >> ctx;
+      l.client_ctx[client] = std::move(ctx);
+    }
   }
 }
 

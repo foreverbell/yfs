@@ -12,7 +12,6 @@
 
 int lock_client_cache_rsm::last_port = 0;
 
-// XXX: remove lock_client(xdst).
 lock_client_cache_rsm::lock_client_cache_rsm(std::string xdst, class lock_release_user *_lu)
   : lu(_lu)
 {
@@ -49,6 +48,9 @@ lock_client_cache_rsm::acquire_impl(
   int r = 0;
 
   while (true) {
+    // Assign a new sequence number for this acquire.
+    xid += 1;
+
     pthread_mutex_unlock(&m);
     ret = rsmc->call(lock_protocol::acquire, lid, id, xid, r);
     pthread_mutex_lock(&m);
@@ -90,6 +92,9 @@ lock_client_cache_rsm::release_impl(
     lu->dorelease(lid);
   }
 
+  // Assign a new sequence number for this release.
+  xid += 1;
+
   lock_protocol::status ret;
   int r;
 
@@ -112,9 +117,6 @@ lock_protocol::status
 lock_client_cache_rsm::acquire(lock_protocol::lockid_t lid)
 {
   ScopedLock ml(&m);
-
-  // Assign a new sequence number for this acquire.
-  xid += 1;
 
   lock_protocol::status ret;
   std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
@@ -165,9 +167,6 @@ lock_protocol::status
 lock_client_cache_rsm::release(lock_protocol::lockid_t lid, bool flush)
 {
   ScopedLock ml(&m);
-
-  // Intentionally not increase xid, as we want the corresponding release
-  // should probably carry the same sequence number as the last acquire.
 
   lock_protocol::status ret;
   std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);

@@ -21,14 +21,46 @@ class lock_server_cache_rsm : public rsm_state_transfer {
     revoked, // lock is lent but being revoked
   };
 
+  struct acquire_reply_t {
+    lock_protocol::status status;
+    int ret;
+    std::string revoke;
+  };
+
+  struct release_reply_t {
+    lock_protocol::status status;
+  };
+
+  struct client_context_t {
+    lock_protocol::xid_t last_xid;
+    acquire_reply_t acquire_reply;
+    release_reply_t release_reply;
+
+    client_context_t() : last_xid(0) { }
+
+    friend inline marshall& operator<<(marshall &m, client_context_t ctx) {
+      m << ctx.last_xid;
+      m << ctx.acquire_reply.status << ctx.acquire_reply.ret << ctx.acquire_reply.revoke;
+      m << ctx.release_reply.status;
+      return m;
+    }
+
+    friend inline unmarshall& operator>>(unmarshall &u, client_context_t &ctx) {
+      u >> ctx.last_xid;
+      u >> ctx.acquire_reply.status >> ctx.acquire_reply.ret >> ctx.acquire_reply.revoke;
+      u >> ctx.release_reply.status;
+      return u;
+    }
+  };
+
   struct lock_t {
     lock_status status;
     int nacquire;
     std::string owner;
-    uqueue<std::string> queue;     // waiting list
-    lock_protocol::xid_t last_xid; // xid of last execution
+    uqueue<std::string> queue; // waiting list
+    std::map<std::string, client_context_t> client_ctx;
 
-    lock_t() : status(lock_status::free), nacquire(0), last_xid(0) { }
+    lock_t() : status(lock_status::free), nacquire(0) { }
   };
   std::map<lock_protocol::lockid_t, lock_t> locks;
 

@@ -1,9 +1,12 @@
 #include "rsm_client.h"
 #include <vector>
+#include <string>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <handle.h>
+
+#include "handle.h"
+#include "slock.h"
 #include "lang/verify.h"
 
 rsm_client::rsm_client(std::string dst)
@@ -23,11 +26,15 @@ rsm_client::rsm_client(std::string dst)
   printf("rsm_client: done\n");
 }
 
+// Called when the current primary is not responding, i.e. the primary
+// is dead or in another network partition. In either case, we select
+// another primary to contact with.
 // Assumes caller holds rsm_client_mutex.
 void
 rsm_client::primary_failure()
 {
-  // You fill this in for Lab 7
+  primary = known_mems.back();
+  known_mems.pop_back();
 }
 
 rsm_protocol::status
@@ -92,8 +99,10 @@ rsm_client::init_members()
   }
   VERIFY(pthread_mutex_lock(&rsm_client_mutex) == 0);
 
-  if (cl == 0 || ret != rsm_protocol::OK)
+  if (cl == 0 || ret != rsm_protocol::OK) {
+    printf("rsm_client::init_members failed, cl %ld, ret %d\n", (intptr_t) cl, ret);
     return false;
+  }
   if (new_view.size() < 1) {
     printf("rsm_client::init_members do not know any members!\n");
     VERIFY(0);

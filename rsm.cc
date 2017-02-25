@@ -217,10 +217,12 @@ rsm::sync_with_backups()
   backups.insert(members.begin(), members.end());
   backups.erase(cfg->myaddr());  // erase primary from backups
 
-  // Wait until
-  //  * all backups in view vid_insync are synchronized;
-  //  * or there is a committed viewchange.
-  pthread_cond_wait(&recovery_cond, &rsm_mutex);
+  if (!backups.empty()) {
+    // Wait until
+    //  * all backups in view vid_insync are synchronized;
+    //  * or there is a committed viewchange.
+    pthread_cond_wait(&recovery_cond, &rsm_mutex);
+  }
 
   tprintf("sync_with_backups: insync is false now\n");
   insync = false;

@@ -21,11 +21,15 @@ class scoped_lock_impl {
  public:
   scoped_lock_impl(L *lc, lock_protocol::lockid_t lid, bool flush = false)
     : lc(lc), lid(lid), flush(flush) {
-    lc->acquire(lid);
+    while (lc->acquire(lid) != lock_protocol::OK) {
+      printf("yfs_client: acquiring lock failed, try again.\n");
+    }
   }
 
   ~scoped_lock_impl() {
-    lc->release(lid, flush);
+    while (lc->release(lid, flush) != lock_protocol::OK) {
+      printf("yfs_client: releasing lock failed, try again.\n");
+    }
   }
 };
 
