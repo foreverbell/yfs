@@ -20,7 +20,7 @@ class lock_server_cache {
     lock_status status;
     int nacquire;
     std::string owner;
-    uqueue<std::string> queue; // waiting list
+    uqueue<std::string> wait_q; // waiting list
 
     lock_t() : status(lock_status::free), nacquire(0) { }
   };

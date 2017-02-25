@@ -110,7 +110,6 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
     tprintf("stale acquire request of lock %lld from client %s.\n", lid, id.c_str());
     return lock_protocol::STALE;
   } else if (it->second.client_ctx[id].last_xid == xid) {
-    tprintf("fuck fuck aaa %lld.\n", xid);
     const acquire_reply_t &reply = it->second.client_ctx[id].acquire_reply;
 
     if (reply.status == lock_protocol::OK) {
@@ -134,10 +133,9 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
     switch (it->second.status) {
       case lock_status::free: {
         it->second.status = lock_status::lent;
-        it->second.nacquire += 1;
         it->second.owner = id;
 
-        reply.ret = r = !it->second.queue.empty();
+        reply.ret = r = !it->second.wait_q.empty();
 
         tprintf("lock %lld is owned by %s now.\n", lid, it->second.owner.c_str());
 
@@ -146,7 +144,7 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
 
       case lock_status::lent:
       case lock_status::revoked: {
-        it->second.queue.push(id);
+        it->second.wait_q.push(id);
 
         if (it->second.status == lock_status::lent) {
           task_t task;
@@ -185,7 +183,6 @@ lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
     tprintf("stale release request of lock %lld from client %s.\n", lid, id.c_str());
     return lock_protocol::STALE;
   } else if (xid == it->second.client_ctx[id].last_xid) {
-    tprintf("fuck fuck bbb %lld.\n", xid);
     return it->second.client_ctx[id].release_reply.status;
   }
 
@@ -205,9 +202,9 @@ lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
   it->second.status = lock_status::free;
   it->second.owner.clear();
 
-  if (!it->second.queue.empty()) {
-    std::string next = it->second.queue.front();
-    it->second.queue.pop();
+  if (!it->second.wait_q.empty()) {
+    std::string next = it->second.wait_q.front();
+    it->second.wait_q.pop();
 
     task_t task;
     task.client = std::move(next);
@@ -233,16 +230,10 @@ lock_server_cache_rsm::marshal_state()
     m << iter_lock->first;
 
     const lock_t &l = iter_lock->second;
-    std::queue<std::string> q = l.queue.get();
 
     m << (int) l.status;
-    m << l.nacquire;
     m << l.owner;
-    m << (int) q.size();
-    while (!q.empty()) {
-      m << q.front();
-      q.pop();
-    }
+    m << l.wait_q;
 
     m << (int) l.client_ctx.size();
     for (iter_ctx = l.client_ctx.begin(); iter_ctx != l.client_ctx.end(); ++iter_ctx) {
@@ -267,7 +258,7 @@ lock_server_cache_rsm::unmarshal_state(std::string state)
   for (int i = 0; i < lock_size; ++i) {
     lock_protocol::lockid_t key;
     std::string elem;
-    int size, status;
+    int status;
 
     u >> key;
     locks[key] = lock_t();
@@ -275,14 +266,8 @@ lock_server_cache_rsm::unmarshal_state(std::string state)
     lock_t &l = locks[key];
 
     u >> status; l.status = (lock_status) status;
-    u >> l.nacquire;
     u >> l.owner;
-    u >> size;
-    while (size > 0) {
-      size -= 1;
-      u >> elem;
-      l.queue.push(elem);
-    }
+    u >> l.wait_q;
 
     u >> ctx_size;
     for (int j = 0; j < ctx_size; ++j) {
@@ -293,21 +278,4 @@ lock_server_cache_rsm::unmarshal_state(std::string state)
       l.client_ctx[client] = std::move(ctx);
     }
   }
-}
-
-lock_protocol::status
-lock_server_cache_rsm::stat(lock_protocol::lockid_t lid, int &r)
-{
-  ScopedLock ml(&m);
-
-  tprintf("stat request of lock %lld.\n", lid);
-
-  std::map<lock_protocol::lockid_t, lock_t>::iterator it = locks.find(lid);
-  if (it == locks.end()) {
-    r = 0;
-  } else {
-    r = it->second.nacquire;
-  }
-
-  return lock_protocol::OK;
 }

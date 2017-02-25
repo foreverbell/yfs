@@ -33,14 +33,14 @@ lock_server_cache::acquire(lock_protocol::lockid_t lid, std::string id, int &r)
         it->second.status = lock_status::lent;
         it->second.nacquire += 1;
         it->second.owner = id;
-        r = !it->second.queue.empty();
+        r = !it->second.wait_q.empty();
         tprintf("lock %lld is owned by %s now.\n", lid, it->second.owner.c_str());
         return lock_protocol::OK;
       }
 
       case lock_status::lent:
       case lock_status::revoked: {
-        it->second.queue.push(id);
+        it->second.wait_q.push(id);
 
         if (it->second.status == lock_status::lent) {
           handle h(it->second.owner);
@@ -82,9 +82,9 @@ lock_server_cache::release(lock_protocol::lockid_t lid, std::string id, int &)
   it->second.status = lock_status::free;
   it->second.owner.clear();
 
-  if (!it->second.queue.empty()) {
-    std::string next = it->second.queue.front();
-    it->second.queue.pop();
+  if (!it->second.wait_q.empty()) {
+    std::string next = it->second.wait_q.front();
+    it->second.wait_q.pop();
 
     handle h(next);
     rpcc *cl = h.safebind();

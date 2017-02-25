@@ -55,12 +55,11 @@ class lock_server_cache_rsm : public rsm_state_transfer {
 
   struct lock_t {
     lock_status status;
-    int nacquire;
     std::string owner;
-    uqueue<std::string> queue; // waiting list
+    uqueue<std::string> wait_q; // waiting list
     std::map<std::string, client_context_t> client_ctx;
 
-    lock_t() : status(lock_status::free), nacquire(0) { }
+    lock_t() : status(lock_status::free) { }
   };
   std::map<lock_protocol::lockid_t, lock_t> locks;
 
@@ -82,7 +81,6 @@ class lock_server_cache_rsm : public rsm_state_transfer {
   std::string marshal_state();
   void unmarshal_state(std::string state);
 
-  lock_protocol::status stat(lock_protocol::lockid_t, int &);
   lock_protocol::status acquire(lock_protocol::lockid_t, std::string, lock_protocol::xid_t, int &);
   lock_protocol::status release(lock_protocol::lockid_t, std::string, lock_protocol::xid_t, int &);
 };

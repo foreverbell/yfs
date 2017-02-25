@@ -5,6 +5,7 @@
 
 #include <queue>
 #include <unordered_set>
+#include "rpc/marshall.h"
 
 template <typename T>
 class uqueue {
@@ -40,5 +41,36 @@ class uqueue {
     return q;
   }
 };
+
+template <typename T>
+inline marshall &
+operator<<(marshall &m, uqueue<T> q)
+{
+  std::queue<T> _q = q.get();
+
+  m << (int) _q.size();
+  while (!_q.empty()) {
+    T elem = _q.front();
+    _q.pop();
+    m << elem;
+  }
+  return m;
+}
+
+template <typename T>
+inline unmarshall &
+operator>>(unmarshall &u, uqueue<T> &q)
+{
+  int size;
+
+  u >> size;
+  while (size > 0) {
+    size -= 1;
+    T elem;
+    u >> elem;
+    q.push(elem);
+  }
+  return u;
+}
 
 #endif
