@@ -34,11 +34,15 @@ lock_server_cache_rsm::lock_server_cache_rsm(class rsm *_rsm)
 
   pthread_create(&th, NULL, &revokethread, (void *) this);
   pthread_create(&th, NULL, &retrythread, (void *) this);
+
+  // Register (un)marshal handler to rsm.
+  rsm->set_state_transfer(this);
 }
 
 void
 lock_server_cache_rsm::revoker()
 {
+  // We don't need to hold lock here as revoke_tasks is thread-safe.
   task_t task;
 
   while (true) {
@@ -124,7 +128,7 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
           task_t task;
           task.lid = lid;
           task.client = it->second.owner;
-          revoke_tasks.enq(std::move(task)); // XXX: are we master?
+          revoke_tasks.enq(std::move(task));
 
           it->second.status = lock_status::revoked;
         }
@@ -171,7 +175,7 @@ lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
     task_t task;
     task.client = std::move(next);
     task.lid = lid;
-    retry_tasks.enq(std::move(task)); // XXX: are we master?
+    retry_tasks.enq(std::move(task));
   }
 
   return lock_protocol::OK;
@@ -180,17 +184,65 @@ lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
 std::string
 lock_server_cache_rsm::marshal_state()
 {
-  std::ostringstream ost;
-  std::string r;
+  ScopedLock ml(&m);
 
-  // TODO
-  return r;
+  marshall m;
+  std::map<lock_protocol::lockid_t, lock_t>::iterator iter_lock;
+
+  m << (int) locks.size();
+
+  for (iter_lock = locks.begin(); iter_lock != locks.end(); ++iter_lock) {
+    m << iter_lock->first;
+
+    const lock_t &l = iter_lock->second;
+    std::queue<std::string> q = l.queue.get();
+
+    m << (int) l.status;
+    m << l.nacquire;
+    m << l.owner;
+    m << (int) q.size();
+    while (!q.empty()) {
+      m << q.front();
+      q.pop();
+    }
+    m << l.last_xid;
+  }
+
+  return m.str();
 }
 
 void
 lock_server_cache_rsm::unmarshal_state(std::string state)
 {
-  // TODO
+  ScopedLock ml(&m);
+
+  unmarshall u(state);
+  int map_size;
+
+  locks.clear();
+
+  u >> map_size;
+  for (int i = 0; i < map_size; ++i) {
+    lock_protocol::lockid_t key;
+    std::string elem;
+    int size, status;
+
+    u >> key;
+    locks[key] = lock_t();
+
+    lock_t &l = locks[key];
+
+    u >> status; l.status = (lock_status) status;
+    u >> l.nacquire;
+    u >> l.owner;
+    u >> size;
+    while (size > 0) {
+      size -= 1;
+      u >> elem;
+      l.queue.push(elem);
+    }
+    u >> l.last_xid;
+  }
 }
 
 lock_protocol::status

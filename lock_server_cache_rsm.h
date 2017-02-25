@@ -2,6 +2,7 @@
 #define lock_server_cache_rsm_h
 
 #include <string>
+#include <queue>
 
 #include "lock_protocol.h"
 #include "rpc.h"

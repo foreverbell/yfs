@@ -35,6 +35,10 @@ class uqueue {
   bool empty() const {
     return q.empty();
   }
+
+  std::queue<T> get() const {
+    return q;
+  }
 };
 
 #endif

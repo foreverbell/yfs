@@ -64,7 +64,8 @@ inline marshall& operator<<(marshall &m, viewstamp v)
   return m;
 }
 
-inline unmarshall& operator>>(unmarshall &u, viewstamp &v) {
+inline unmarshall& operator>>(unmarshall &u, viewstamp &v)
+{
   u >> v.vid;
   u >> v.seqno;
   return u;

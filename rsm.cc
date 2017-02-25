@@ -542,7 +542,7 @@ rsm::set_primary(unsigned vid)
   std::vector<std::string> p = cfg->get_view(vid - 1);
   VERIFY(c.size() > 0);
 
-  if (isamember(primary,c)) {
+  if (isamember(primary, c)) {
     tprintf("set_primary: primary stays %s\n", primary.c_str());
     return;
   }
