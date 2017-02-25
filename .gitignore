@@ -20,3 +20,5 @@ rpc/*.d
 
 yfs1/
 yfs2/
+
+config

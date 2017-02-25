@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
+
 using namespace std;
 
 rsmtest_client *lc;
@@ -19,7 +20,7 @@ main(int argc, char *argv[])
 {
   int r;
 
-  if(argc != 4){
+  if (argc != 4) {
     fprintf(stderr, "Usage: %s [host:]port [partition] arg\n", argv[0]);
     exit(1);
   }

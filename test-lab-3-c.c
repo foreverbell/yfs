@@ -36,17 +36,17 @@ create1(const char *d, const char *f, const char *in)
 
   sprintf(n, "%s/%s", d, f);
   fd = creat(n, 0666);
-  if(fd < 0){
+  if (fd < 0) {
     fprintf(stderr, "test-lab-3-c: create(%s): %s\n",
             n, strerror(errno));
     exit(1);
   }
-  if(write(fd, in, strlen(in)) != strlen(in)){
+  if (write(fd, in, strlen(in)) != strlen(in)) {
     fprintf(stderr, "test-lab-3-c: write(%s): %s\n",
             n, strerror(errno));
     exit(1);
   }
-  if(close(fd) != 0){
+  if (close(fd) != 0) {
     fprintf(stderr, "test-lab-3-c: close(%s): %s\n",
             n, strerror(errno));
     exit(1);
@@ -61,14 +61,14 @@ check1(const char *d, const char *f, const char *in)
 
   sprintf(n, "%s/%s", d, f);
   fd = open(n, 0);
-  if(fd < 0){
+  if (fd < 0) {
     fprintf(stderr, "test-lab-3-c: open(%s): %s\n",
             n, strerror(errno));
     exit(1);
   }
   errno = 0;
   cc = read(fd, buf, sizeof(buf) - 1);
-  if(cc != strlen(in)){
+  if (cc != strlen(in)) {
     fprintf(stderr, "test-lab-3-c: read(%s) returned too little %d%s%s\n",
             n,
             cc,
@@ -78,7 +78,7 @@ check1(const char *d, const char *f, const char *in)
   }
   close(fd);
   buf[cc] = '\0';
-  if(strncmp(buf, in, strlen(n)) != 0){
+  if (strncmp(buf, in, strlen(n)) != 0) {
     fprintf(stderr, "test-lab-3-c: read(%s) got \"%s\", not \"%s\"\n",
             n, buf, in);
     exit(1);
@@ -93,7 +93,7 @@ unlink1(const char *d, const char *f)
   sleep(1);
 
   sprintf(n, "%s/%s", d, f);
-  if(unlink(n) != 0){
+  if (unlink(n) != 0) {
     fprintf(stderr, "test-lab-3-c: unlink(%s): %s\n",
             n, strerror(errno));
     exit(1);
@@ -108,7 +108,7 @@ checknot(const char *d, const char *f)
 
   sprintf(n, "%s/%s", d, f);
   fd = open(n, 0);
-  if(fd >= 0){
+  if (fd >= 0) {
     fprintf(stderr, "test-lab-3-c: open(%s) succeeded for deleted file\n", n);
     exit(1);
   }
@@ -124,17 +124,17 @@ append1(const char *d, const char *f, const char *in)
 
   sprintf(n, "%s/%s", d, f);
   fd = open(n, O_WRONLY|O_APPEND);
-  if(fd < 0){
+  if (fd < 0) {
     fprintf(stderr, "test-lab-3-c: append open(%s): %s\n",
             n, strerror(errno));
     exit(1);
   }
-  if(write(fd, in, strlen(in)) != strlen(in)){
+  if (write(fd, in, strlen(in)) != strlen(in)) {
     fprintf(stderr, "test-lab-3-c: append write(%s): %s\n",
             n, strerror(errno));
     exit(1);
   }
-  if(close(fd) != 0){
+  if (close(fd) != 0) {
     fprintf(stderr, "test-lab-3-c: append close(%s): %s\n",
             n, strerror(errno));
     exit(1);
@@ -153,20 +153,20 @@ createn(const char *d, const char *prefix, int nf)
    */
   sleep(1);
 
-  for(i = 0; i < nf; i++){
+  for(i = 0; i < nf; i++) {
     sprintf(n, "%s/%s-%d", d, prefix, i);
     fd = creat(n, 0666);
-    if(fd < 0){
+    if (fd < 0) {
       fprintf(stderr, "test-lab-3-c: create(%s): %s\n",
               n, strerror(errno));
       exit(1);
     }
-    if(write(fd, &i, sizeof(i)) != sizeof(i)){
+    if (write(fd, &i, sizeof(i)) != sizeof(i)) {
       fprintf(stderr, "test-lab-3-c: write(%s): %s\n",
               n, strerror(errno));
       exit(1);
     }
-    if(close(fd) != 0){
+    if (close(fd) != 0) {
       fprintf(stderr, "test-lab-3-c: close(%s): %s\n",
               n, strerror(errno));
       exit(1);
@@ -180,17 +180,17 @@ checkn(const char *d, const char *prefix, int nf)
   int fd, i, cc, j;
   char n[512];
 
-  for(i = 0; i < nf; i++){
+  for(i = 0; i < nf; i++) {
     sprintf(n, "%s/%s-%d", d, prefix, i);
     fd = open(n, 0);
-    if(fd < 0){
+    if (fd < 0) {
       fprintf(stderr, "test-lab-3-c: open(%s): %s\n",
               n, strerror(errno));
       exit(1);
     }
     j = -1;
     cc = read(fd, &j, sizeof(j));
-    if(cc != sizeof(j)){
+    if (cc != sizeof(j)) {
       fprintf(stderr, "test-lab-3-c: read(%s) returned too little %d%s%s\n",
               n,
               cc,
@@ -198,7 +198,7 @@ checkn(const char *d, const char *prefix, int nf)
               errno ? strerror(errno) : "");
       exit(1);
     }
-    if(j != i){
+    if (j != i) {
       fprintf(stderr, "test-lab-3-c: checkn %s contained %d not %d\n",
               n, j, i);
       exit(1);
@@ -215,9 +215,9 @@ unlinkn(const char *d, const char *prefix, int nf)
 
   sleep(1);
 
-  for(i = 0; i < nf; i++){
+  for(i = 0; i < nf; i++) {
     sprintf(n, "%s/%s-%d", d, prefix, i);
-    if(unlink(n) != 0){
+    if (unlink(n) != 0) {
       fprintf(stderr, "test-lab-3-c: unlink(%s): %s\n",
               n, strerror(errno));
       exit(1);
@@ -242,13 +242,13 @@ dircheck(const char *d, int nf)
   int nnames = 0, i;
 
   dp = opendir(d);
-  if(dp == 0){
+  if (dp == 0) {
     fprintf(stderr, "test-lab-3-c: opendir(%s): %s\n", d, strerror(errno));
     exit(1);
   }
-  while((e = readdir(dp))){
-    if(e->d_name[0] != '.'){
-      if(nnames >= sizeof(names)/sizeof(names[0])){
+  while((e = readdir(dp))) {
+    if (e->d_name[0] != '.') {
+      if (nnames >= sizeof(names)/sizeof(names[0])) {
         fprintf(stderr, "warning: too many files in %s\n", d);
       }
       names[nnames] = (char *) malloc(strlen(e->d_name) + 1);
@@ -258,15 +258,15 @@ dircheck(const char *d, int nf)
   }
   closedir(dp);
 
-  if(nf != nnames){
+  if (nf != nnames) {
     fprintf(stderr, "test-lab-3-c: wanted %d dir entries, got %d\n", nf, nnames);
     exit(1);
   }
 
   /* check for duplicate entries */
   qsort(names, nnames, sizeof(names[0]), compar);
-  for(i = 0; i < nnames-1; i++){
-    if(strcmp(names[i], names[i+1]) == 0){
+  for(i = 0; i < nnames-1; i++) {
+    if (strcmp(names[i], names[i+1]) == 0) {
       fprintf(stderr, "test-lab-3-c: duplicate directory entry for %s\n", names[i]);
       exit(1);
     }
@@ -289,7 +289,7 @@ reap (int pid)
     fprintf(stderr, "unexpected pid reaped: %d\n", wpid);
     exit(1);
   }
-  if(!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+  if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
     fprintf(stderr, "child exited unhappily\n");
     exit(1);
   }
@@ -300,19 +300,19 @@ main(int argc, char *argv[])
 {
   int pid;
 
-  if(argc != 3){
+  if (argc != 3) {
     fprintf(stderr, "Usage: test-lab-3-c dir1 dir2\n");
     exit(1);
   }
 
   sprintf(d1, "%s/da%d", argv[1], getpid());
-  if(mkdir(d1, 0777) != 0){
+  if (mkdir(d1, 0777) != 0) {
     fprintf(stderr, "test-lab-3-c: failed: mkdir(%s): %s\n",
             d1, strerror(errno));
     exit(1);
   }
   sprintf(d2, "%s/db%d", argv[2], getpid());
-  if(mkdir(d2, 0777) != 0){
+  if (mkdir(d2, 0777) != 0) {
     fprintf(stderr, "test-lab-3-c: failed: mkdir(%s): %s\n",
             d2, strerror(errno));
     exit(1);
@@ -321,7 +321,7 @@ main(int argc, char *argv[])
   {
     char dd[512];
     sprintf(dd, "%s/da%d", argv[2], getpid());
-    if(access(dd, 0) != 0){
+    if (access(dd, 0) != 0) {
       fprintf(stderr, "test-lab-3-c: failed: access(%s) after mkdir %s: %s\n",
               dd, d1, strerror(errno));
       exit(1);
@@ -333,11 +333,11 @@ main(int argc, char *argv[])
   printf("Create/delete in separate directories: ");
 
   pid = fork();
-  if(pid < 0){
+  if (pid < 0) {
     perror("test-lab-3-c: fork");
     exit(1);
   }
-  if(pid == 0){
+  if (pid == 0) {
     createn(d2, "xx", 100);
     unlinkn(d2, "xx", 99);
     exit(0);

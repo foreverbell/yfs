@@ -35,5 +35,3 @@ rsmtest_client::breakpoint(int b)
   VERIFY (ret == rsm_test_protocol::OK);
   return r;
 }
-
-

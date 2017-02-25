@@ -15,8 +15,10 @@
 #include "lang/verify.h"
 #include "lock_client_cache_rsm.h"
 
-// must be >= 2
-int nt = 6; //XXX: lab1's rpc handlers are blocking. Since rpcs uses a thread pool of 10 threads, we cannot test more than 10 blocking rpc.
+// Must be >= 2.
+// XXX: lab1's rpc handlers are blocking. Since rpcs uses a thread pool of 10
+// threads, we cannot test more than 10 blocking rpc.
+int nt = 6;
 std::string dst;
 lock_client_cache_rsm **lc = new lock_client_cache_rsm * [nt];
 lock_protocol::lockid_t a = 1;
@@ -34,7 +36,7 @@ check_grant(lock_protocol::lockid_t lid)
 {
   ScopedLock ml(&count_mutex);
   int x = lid & 0xff;
-  if(ct[x] != 0){
+  if (ct[x] != 0) {
     fprintf(stderr, "error: server granted %016llx twice\n", lid);
     fprintf(stdout, "error: server granted %016llx twice\n", lid);
     exit(1);
@@ -47,7 +49,7 @@ check_release(lock_protocol::lockid_t lid)
 {
   ScopedLock ml(&count_mutex);
   int x = lid & 0xff;
-  if(ct[x] != 1){
+  if (ct[x] != 1) {
     fprintf(stderr, "error: client released un-held lock %016llx\n",  lid);
     exit(1);
   }
@@ -167,7 +169,7 @@ main(int argc, char *argv[])
 
     //jsl_set_debug(2);
 
-    if(argc < 2) {
+    if (argc < 2) {
       fprintf(stderr, "Usage: %s [host:]port [test]\n", argv[0]);
       exit(1);
     }
@@ -176,7 +178,7 @@ main(int argc, char *argv[])
 
     if (argc > 2) {
       test = atoi(argv[2]);
-      if(test < 1 || test > 5){
+      if (test < 1 || test > 5) {
         printf("Test number must be between 1 and 5\n");
         exit(1);
       }
@@ -186,62 +188,62 @@ main(int argc, char *argv[])
     printf("cache lock client\n");
     for (int i = 0; i < nt; i++) lc[i] = new lock_client_cache_rsm(dst);
 
-    if(!test || test == 1){
+    if (!test || test == 1) {
       test1();
     }
 
-    if(!test || test == 2){
+    if (!test || test == 2) {
       // test2
       for (int i = 0; i < nt; i++) {
-	int *a = new int (i);
-	r = pthread_create(&th[i], NULL, test2, (void *) a);
-	VERIFY (r == 0);
+        int *a = new int (i);
+        r = pthread_create(&th[i], NULL, test2, (void *) a);
+        VERIFY (r == 0);
       }
       for (int i = 0; i < nt; i++) {
-	pthread_join(th[i], NULL);
+        pthread_join(th[i], NULL);
       }
     }
 
-    if(!test || test == 3){
+    if (!test || test == 3) {
       printf("test 3\n");
       
       // test3
       for (int i = 0; i < nt; i++) {
-	int *a = new int (i);
-	r = pthread_create(&th[i], NULL, test3, (void *) a);
-	VERIFY (r == 0);
+        int *a = new int (i);
+        r = pthread_create(&th[i], NULL, test3, (void *) a);
+        VERIFY (r == 0);
       }
       for (int i = 0; i < nt; i++) {
-	pthread_join(th[i], NULL);
+        pthread_join(th[i], NULL);
       }
     }
 
-    if(!test || test == 4){
+    if (!test || test == 4) {
       printf("test 4\n");
       
       // test 4
       for (int i = 0; i < 2; i++) {
-	int *a = new int (i);
-	r = pthread_create(&th[i], NULL, test4, (void *) a);
-	VERIFY (r == 0);
+        int *a = new int (i);
+        r = pthread_create(&th[i], NULL, test4, (void *) a);
+        VERIFY (r == 0);
       }
       for (int i = 0; i < 2; i++) {
-	pthread_join(th[i], NULL);
+        pthread_join(th[i], NULL);
       }
     }
 
-    if(!test || test == 5){
+    if (!test || test == 5) {
       printf("test 5\n");
       
       // test 5
       
       for (int i = 0; i < nt; i++) {
-	int *a = new int (i);
-	r = pthread_create(&th[i], NULL, test5, (void *) a);
-	VERIFY (r == 0);
+        int *a = new int (i);
+        r = pthread_create(&th[i], NULL, test5, (void *) a);
+        VERIFY (r == 0);
       }
       for (int i = 0; i < nt; i++) {
-	pthread_join(th[i], NULL);
+        pthread_join(th[i], NULL);
       }
     }
 

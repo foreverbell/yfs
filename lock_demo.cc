@@ -18,7 +18,7 @@ main(int argc, char *argv[])
 {
   int r;
 
-  if (argc != 2){
+  if (argc != 2) {
     fprintf(stderr, "Usage: %s [host:]port\n", argv[0]);
     exit(1);
   }
