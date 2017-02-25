@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 #include "rsm_protocol.h"
 #include "rsm_state_transfer.h"
 #include "rpc.h"
@@ -30,7 +31,7 @@ class rsm : public config_view_change {
   bool inviewchange;
   unsigned vid_commit;  // Latest view id that is known to rsm layer
   unsigned vid_insync;  // The view id that this node is synchronizing for
-  std::vector<std::string> backups;   // A list of unsynchronized backups
+  std::set<std::string> backups;  // A list of unsynchronized backups
 
   // For testing purposes
   rpcs *testsvr;
