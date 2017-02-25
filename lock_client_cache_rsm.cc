@@ -59,8 +59,19 @@ lock_client_cache_rsm::acquire_impl(
       break;
     }
 
+    struct timeval now;
+    struct timespec next_timeout;
+
+    gettimeofday(&now, NULL);
+    next_timeout.tv_sec = now.tv_sec + 3;
+    next_timeout.tv_nsec = 0;
+
     while (!it->second.should_retry) {
-      pthread_cond_wait(&it->second.retry_c, &m);
+      // Retry automatically every 3 seconds.
+      // TODO: what if spurious wakeup?
+      if (pthread_cond_timedwait(&it->second.retry_c, &m, &next_timeout) == ETIMEDOUT) {
+        break;
+      }
     }
     it->second.should_retry = false;
   }

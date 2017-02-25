@@ -182,6 +182,8 @@ proposer::prepare(unsigned instance, std::vector<std::string> &accepts,
       }
 
       if (res.oldinstance) {
+        tprintf("paxos::prepare: got oldinstance %d from node %s, instance_v=%s\n",
+                instance, node.c_str(), res.instance_v.c_str());
         acc->commit(instance, res.instance_v);
         return false;
       }
@@ -306,7 +308,7 @@ acceptor::preparereq(std::string src, paxos_protocol::preparearg a,
 
   if (a.instance <= instance_h) {
     r.oldinstance = true;
-    r.instance_v = value(a.instance);
+    r.instance_v = values[a.instance];
 
     return paxos_protocol::OK;
   }

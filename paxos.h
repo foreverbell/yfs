@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include "rpc.h"
 #include "paxos_protocol.h"
 #include "log.h"

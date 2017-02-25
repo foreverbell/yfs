@@ -89,8 +89,10 @@ operator>>(unmarshall &u, paxos_protocol::prepareres &r)
 {
   u >> r.oldinstance;
   u >> r.accept;
+  u >> r.instance_v;
   u >> r.n_a;
   u >> r.v_a;
+  u >> r.n_h;
   return u;
 }
 
@@ -99,8 +101,10 @@ operator<<(marshall &m, paxos_protocol::prepareres r)
 {
   m << r.oldinstance;
   m << r.accept;
+  m << r.instance_v;
   m << r.n_a;
   m << r.v_a;
+  m << r.n_h;
   return m;
 }
 

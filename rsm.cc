@@ -442,6 +442,9 @@ rsm::client_invoke(int procno, std::string req, std::string &r)
         tprintf("client_invoke: failed to invoke slave %s.\n", member.c_str());
         return rsm_client_protocol::BUSY;
       }
+
+      breakpoint1();
+      partition1();
     }
 
     // Execute the request on master.
@@ -485,6 +488,8 @@ rsm::invoke(int proc, viewstamp vs, std::string req, int &)
   myvs.seqno += 1;
 
   execute(proc, req, r);
+
+  breakpoint1();
 
   return rsm_protocol::OK;
 }
