@@ -41,4 +41,4 @@ class extent_client {
   extent_protocol::status remove_impl(extent_protocol::extentid_t eid);
 };
 
-#endif 
+#endif

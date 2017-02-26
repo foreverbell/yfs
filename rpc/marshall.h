@@ -59,9 +59,9 @@ class marshall {
     _ind = RPC_HEADER_SZ;
   }
 
-  ~marshall() { 
-    if (_buf) 
-      free(_buf); 
+  ~marshall() {
+    if (_buf)
+      free(_buf);
   }
 
   int size() { return _ind; }
@@ -71,7 +71,7 @@ class marshall {
   void rawbytes(const char *, int);
 
   // Return the current content (excluding header) as a string.
-  std::string get_content() { 
+  std::string get_content() {
     return std::string(_buf+RPC_HEADER_SZ,_ind-RPC_HEADER_SZ);
   }
 
@@ -85,7 +85,7 @@ class marshall {
   void pack_req_header(const req_header &h) {
     int saved_sz = _ind;
     // Leave the first 4-byte empty for channel to fill size of pdu.
-    _ind = sizeof(rpc_sz_t); 
+    _ind = sizeof(rpc_sz_t);
 #if RPC_CHECKSUMMING
     _ind += sizeof(rpc_checksum_t);
 #endif
@@ -100,7 +100,7 @@ class marshall {
   void pack_reply_header(const reply_header &h) {
     int saved_sz = _ind;
     // Leave the first 4-byte empty for channel to fill size of pdu.
-    _ind = sizeof(rpc_sz_t); 
+    _ind = sizeof(rpc_sz_t);
 #if RPC_CHECKSUMMING
     _ind += sizeof(rpc_checksum_t);
 #endif
@@ -180,7 +180,7 @@ class unmarshall {
 
   void unpack_req_header(req_header *h) {
     // The first 4-byte is for channel to fill size of pdu.
-    _ind = sizeof(rpc_sz_t); 
+    _ind = sizeof(rpc_sz_t);
 #if RPC_CHECKSUMMING
     _ind += sizeof(rpc_checksum_t);
 #endif
@@ -194,7 +194,7 @@ class unmarshall {
 
   void unpack_reply_header(reply_header *h) {
     // The first 4-byte is for channel to fill size of pdu.
-    _ind = sizeof(rpc_sz_t); 
+    _ind = sizeof(rpc_sz_t);
 #if RPC_CHECKSUMMING
     _ind += sizeof(rpc_checksum_t);
 #endif

@@ -50,11 +50,11 @@ log::logread(void)
       printf("logread: unknown log record\n");
       VERIFY(0);
     }
-  } 
+  }
   from.close();
 }
 
-std::string 
+std::string
 log::dump()
 {
   std::ifstream from;

@@ -27,4 +27,4 @@ class extent_server {
   std::map<extent_protocol::extentid_t, extent_t> exts;
 };
 
-#endif 
+#endif

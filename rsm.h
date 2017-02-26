@@ -27,7 +27,7 @@ class rsm : public config_view_change {
   viewstamp myvs;
   viewstamp last_myvs;  // Viewstamp of the last executed request
   std::string primary;
-  bool insync; 
+  bool insync;
   bool inviewchange;
   unsigned vid_commit;  // Latest view id that is known to rsm layer
   unsigned vid_insync;  // The view id that this node is synchronizing for

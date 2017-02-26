@@ -9,8 +9,8 @@
 //
 // rsm client interface.
 //
-// The client stubs package up an rpc, and then call the invoke procedure 
-// on the replicated state machine passing the RPC as an argument.  This way 
+// The client stubs package up an rpc, and then call the invoke procedure
+// on the replicated state machine passing the RPC as an argument.  This way
 // the replicated state machine isn't service specific; any server can use it.
 //
 
@@ -139,4 +139,4 @@ rsm_client::call(unsigned int proc, const A1 &a1, const A2 &a2, const A3 &a3, co
   return call_m(proc, m, r);
 }
 
-#endif 
+#endif

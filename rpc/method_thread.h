@@ -45,7 +45,7 @@ method_thread_child()
   VERIFY(pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldtype) == 0);
 }
 
-template <class C> pthread_t 
+template <class C> pthread_t
 method_thread(C *o, bool detach, void (C::*m)())
 {
   class XXX {

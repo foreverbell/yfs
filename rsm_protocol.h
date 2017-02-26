@@ -39,7 +39,7 @@ class rsm_protocol {
     std::string state;
     viewstamp last;
   };
-  
+
   struct joinres {
     std::string log;
   };
@@ -111,4 +111,4 @@ class rsm_test_protocol {
   };
 };
 
-#endif 
+#endif

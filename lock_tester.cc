@@ -81,7 +81,7 @@ test1(void)
 }
 
 void *
-test2(void *x) 
+test2(void *x)
 {
   int i = * (int *) x;
 
@@ -174,7 +174,7 @@ main(int argc, char *argv[])
       exit(1);
     }
 
-    dst = argv[1]; 
+    dst = argv[1];
 
     if (argc > 2) {
       test = atoi(argv[2]);
@@ -206,7 +206,7 @@ main(int argc, char *argv[])
 
     if (!test || test == 3) {
       printf("test 3\n");
-      
+
       // test3
       for (int i = 0; i < nt; i++) {
         int *a = new int (i);
@@ -220,7 +220,7 @@ main(int argc, char *argv[])
 
     if (!test || test == 4) {
       printf("test 4\n");
-      
+
       // test 4
       for (int i = 0; i < 2; i++) {
         int *a = new int (i);
@@ -234,9 +234,9 @@ main(int argc, char *argv[])
 
     if (!test || test == 5) {
       printf("test 5\n");
-      
+
       // test 5
-      
+
       for (int i = 0; i < nt; i++) {
         int *a = new int (i);
         r = pthread_create(&th[i], NULL, test5, (void *) a);

@@ -107,9 +107,9 @@ PollMgr::wait_loop()
 
     if (!readable.size() && !writable.size()) {
       continue;
-    } 
+    }
     // No locking of m_.
-    // Because no add_callback() and del_callback should 
+    // Because no add_callback() and del_callback should
     // modify callbacks_[fd] while the fd is not dead.
     for (unsigned int i = 0; i < readable.size(); i++) {
       int fd = readable[i];
@@ -150,7 +150,7 @@ void
 SelectAIO::watch_fd(int fd, poll_flag flag)
 {
   ScopedLock ml(&m_);
-  if (highfds_ <= fd) 
+  if (highfds_ <= fd)
     highfds_ = fd;
 
   if (flag == CB_RDONLY) {
@@ -179,7 +179,7 @@ SelectAIO::is_watched(int fd, poll_flag flag)
   }
 }
 
-bool 
+bool
 SelectAIO::unwatch_fd(int fd, poll_flag flag)
 {
   ScopedLock ml(&m_);
@@ -255,7 +255,7 @@ SelectAIO::wait_ready(std::vector<int> *readable, std::vector<int> *writable)
   }
 }
 
-#ifdef __linux__ 
+#ifdef __linux__
 
 EPollAIO::EPollAIO()
 {
@@ -309,7 +309,7 @@ EPollAIO::watch_fd(int fd, poll_flag flag)
   VERIFY(epoll_ctl(pollfd_, op, fd, &ev) == 0);
 }
 
-bool 
+bool
 EPollAIO::unwatch_fd(int fd, poll_flag flag)
 {
   VERIFY(fd < MAX_POLL_FDS);

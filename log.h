@@ -27,7 +27,7 @@ class log {
   // Log the highest proposal number that the local paxos acceptor has ever seen.
   void logprop(prop_t n_h);
 
-  // Log the proposal (proposal number and value) that the local paxos acceptor 
+  // Log the proposal (proposal number and value) that the local paxos acceptor
   // accept has ever accepted.
   void logaccept(prop_t n_a, std::string v);
 };

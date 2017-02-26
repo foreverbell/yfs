@@ -25,7 +25,7 @@ retrythread(void *x)
   return 0;
 }
 
-lock_server_cache_rsm::lock_server_cache_rsm(class rsm *_rsm) 
+lock_server_cache_rsm::lock_server_cache_rsm(class rsm *_rsm)
   : rsm (_rsm)
 {
   pthread_mutex_init(&m, NULL);
@@ -166,7 +166,7 @@ lock_server_cache_rsm::acquire(lock_protocol::lockid_t lid, std::string id,
 }
 
 lock_protocol::status
-lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id, 
+lock_server_cache_rsm::release(lock_protocol::lockid_t lid, std::string id,
                                lock_protocol::xid_t xid, int &r)
 {
   ScopedLock ml(&m);

@@ -1,5 +1,5 @@
 #ifndef pollmgr_h
-#define pollmgr_h 
+#define pollmgr_h
 
 #include <sys/select.h>
 #include <vector>
@@ -81,7 +81,7 @@ class SelectAIO : public aio_mgr {
   pthread_mutex_t m_;
 };
 
-#ifdef __linux__ 
+#ifdef __linux__
 class EPollAIO : public aio_mgr {
  public:
   EPollAIO();

@@ -41,7 +41,7 @@ class handle {
    * Since bind may block, the caller probably should not hold a mutex
    * when calling safebind.
    *
-   * return: 
+   * return:
    *   if the first safebind succeeded, all later calls would return
    *   a rpcc object; otherwise, all later calls would return NULL.
    *

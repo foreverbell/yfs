@@ -47,11 +47,11 @@ heartbeatthread(void *x)
   return 0;
 }
 
-config::config(std::string _first, std::string _me, config_view_change *_vc) 
+config::config(std::string _first, std::string _me, config_view_change *_vc)
   : myvid (0), first (_first), me (_me), vc (_vc)
 {
   VERIFY(pthread_mutex_init(&cfg_mutex, NULL) == 0);
-  VERIFY(pthread_cond_init(&config_cond, NULL) == 0);  
+  VERIFY(pthread_cond_init(&config_cond, NULL) == 0);
 
   std::ostringstream ost;
   ost << me;
@@ -245,7 +245,7 @@ config::heartbeater()
   std::vector<std::string> cmems;
 
   ScopedLock ml(&cfg_mutex);
-  
+
   while (1) {
     gettimeofday(&now, NULL);
     next_timeout.tv_sec = now.tv_sec + 3;
@@ -284,7 +284,7 @@ config::heartbeater()
       }
     } else {
       // the rest of the nodes ping the one with smallest id.
-      if ((h = doheartbeat(m)) != OK) 
+      if ((h = doheartbeat(m)) != OK)
         stable = false;
     }
 
@@ -333,7 +333,7 @@ config::doheartbeat(std::string m)
   rpcc *cl = h.safebind();
   if (cl) {
     ret = cl->call(paxos_protocol::heartbeat, me, vid, r, rpcc::to(1000));
-  } 
+  }
 
   VERIFY(pthread_mutex_lock(&cfg_mutex) == 0);
 

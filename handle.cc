@@ -4,7 +4,7 @@
 
 handle_mgr mgr;
 
-handle::handle(std::string m) 
+handle::handle(std::string m)
 {
   h = mgr.get_handle(m);
 }
@@ -27,9 +27,9 @@ handle::safebind()
   // Starting with lab 6, our test script assumes that the failure
   // can be detected by paxos and rsm layer within few seconds. We have
   // to set the timeout with a small value to support the assumption.
-  // 
+  //
   // Note: with RPC_LOSSY=5, your lab would failed to pass the tests of
-  // lab 6 and lab 7 because the rpc layer may delay your RPC request, 
+  // lab 6 and lab 7 because the rpc layer may delay your RPC request,
   // and cause a time out failure. Please make sure RPC_LOSSY is set to 0.
   ret = cl->bind(rpcc::to(1000));
   if (ret < 0) {
@@ -43,7 +43,7 @@ handle::safebind()
   return h->cl;
 }
 
-handle::~handle() 
+handle::~handle()
 {
   if (h) mgr.done_handle(h);
 }
@@ -73,7 +73,7 @@ handle_mgr::get_handle(std::string m)
   return h;
 }
 
-void 
+void
 handle_mgr::done_handle(struct hinfo *h)
 {
   ScopedLock ml(&handle_mutex);

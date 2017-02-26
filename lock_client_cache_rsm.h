@@ -12,7 +12,7 @@
 
 #include "rsm_client.h"
 
-// Classes that inherit lock_release_user can override dorelease so that 
+// Classes that inherit lock_release_user can override dorelease so that
 // that they will be called when lock_client releases a lock.
 // You will not need to do anything with this class until Lab 5.
 class lock_release_user {
@@ -23,7 +23,7 @@ class lock_release_user {
 
 class lock_client_cache_rsm;
 
-// Clients that caches locks.  The server can revoke locks using 
+// Clients that caches locks.  The server can revoke locks using
 // lock_revoke_server.
 class lock_client_cache_rsm {
  private:

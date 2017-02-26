@@ -95,7 +95,7 @@ rsm_client::init_members()
   VERIFY(pthread_mutex_unlock(&rsm_client_mutex) == 0);
   rpcc *cl = h.safebind();
   if (cl) {
-    ret = cl->call(rsm_client_protocol::members, 0, new_view, rpcc::to(1000)); 
+    ret = cl->call(rsm_client_protocol::members, 0, new_view, rpcc::to(1000));
   }
   VERIFY(pthread_mutex_lock(&rsm_client_mutex) == 0);
 
